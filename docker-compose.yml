@@ -1,0 +1,30 @@
+services:
+  workspace:
+    image: gtelmaps/ws-oracle-linux:9
+    container_name: ws-oracle-linux-9
+    build:
+      context: ./
+    restart: unless-stopped
+    # init: true
+    # privileged: true
+    # working_dir: ${APP_CODE_PATH_CONTAINER}
+    tty: true
+    # environment:
+    #   - DOCKER_HOST=tcp://${DOCKER_HOST_IP}:${DOCKER_HOST_PORT}
+    #   - DOCKER_TLS_VERIFY=
+    #   - CHOKIDAR_USEPOLLING=true
+    #   - GIT_USERNAME=${GIT_USERNAME}
+    #   - GIT_EMAIL=${GIT_EMAIL}
+    #   - NODE_OPTIONS=--openssl-legacy-provider
+    # volumes:
+    #   # - wsprofile:/home/ubuntu
+    #   - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
+    # ports:
+    #   - "${WORKSPACE_SSH_PORT}:22"
+    #   - "${WORKSPACE_SUPERVISOR_PORT}:9001"
+    #   - "8000"
+    #   - "8080"
+    #   - "3000"
+    # networks:
+    #   - shared-proxy
+    #   - default

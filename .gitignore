@@ -1,0 +1,15 @@
+# =========================
+# Env / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+
+# =========================
+# Editor/OS noise
+# =========================
+.idea/
+.vscode/
