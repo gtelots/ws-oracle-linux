@@ -29,8 +29,14 @@ services:
         KUBECTL_VERSION: ${KUBECTL_VERSION}
         HELM_VERSION: ${HELM_VERSION}
         K9S_VERSION: ${K9S_VERSION}
+        # SSH configuration
+        ENABLE_SSH: ${ENABLE_SSH}
+        SSH_PORT: ${SSH_PORT}
     restart: unless-stopped
     working_dir: ${APP_CODE_PATH_CONTAINER}
     tty: true
+    privileged: true
+    ports:
+      - "${SSH_FORWARD_PORT}:${SSH_PORT}"
     # volumes:
     #   - home_data:/home/${USERNAME}

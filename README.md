@@ -2,7 +2,36 @@
 
 ## Roadmaps
 
-- [ ] Viết script để cập nhật _VERSION lên mới nhất, có thể tùy chọn có cập nhật hay manual tự chỉnh
+- [ ] Docker in Docker
+- [ ] SSH + SSH pass
+- [ ] certs
+- [ ] crontab
+- [ ] ngox
+- [ ] tailscale
 - [ ] LazyVim vs AstroNvim vs LunarVim vs NvChad
-- [ ] Docker in docker
+- [ ] Docker in docker / dry
+- [ ] NodeJS
+- [ ] Python
+- [ ] PHP / Composer
+- [ ] Go
+- [ ] Rust
+- [ ] Java
+- [ ] Ruby
+- [ ] WP Cli
+- [ ] Terraform
+- [ ] DB Client ?
+- [ ] Supervisor
+- [ ] Dotfiles
+- [ ] DB Beaver ?
+- [ ] Write README.md
+- [ ] Write taskfiles
 
+# Ideas
+
+- https://github.com/gtelots/ots-devops
+- https://github.com/laragis/My_Workspace
+- https://laravel.com/docs/12.x/homestead / https://github.com/laravel/homestead
+- https://github.com/laradock/laradock
+- https://github.com/devspace-sh/devspace
+- https://github.com/docksal/docksal
+- https://github.com/lando/lando

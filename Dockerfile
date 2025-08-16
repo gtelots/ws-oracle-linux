@@ -347,6 +347,59 @@ RUN set -eux; \
 USER root
 
 # -----------------------------------------------------------------------------
+# SSH Server Configuration
+# -----------------------------------------------------------------------------
+ARG INSTALL_OPENSSH_SERVER=1
+ARG SSH_PORT=2222
+
+COPY .ssh/id_ed25519_all_ws_ol /tmp/id_ed25519
+COPY .ssh/id_ed25519_all_ws_ol.pub /tmp/id_ed25519.pub
+
+RUN set -eux; \
+  if [ "${INSTALL_OPENSSH_SERVER}" = "1" ]; then \
+    echo "==> Installing and configuring SSH server"; \
+    # Install OpenSSH server
+    dnf -y install --setopt=install_weak_deps=False --nodocs openssh-server; \
+    # Generate host keys
+    ssh-keygen -A; \
+    # Create SSH directory for dev user
+    mkdir -p /home/${USERNAME}/.ssh; \
+    chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh; \
+    chmod 700 /home/${USERNAME}/.ssh; \
+
+    cat /tmp/id_ed25519.pub >> /root/.ssh/authorized_keys \
+        && cat /tmp/id_ed25519.pub >> /root/.ssh/id_ed25519.pub \
+        && cat /tmp/id_ed25519 >> /root/.ssh/id_ed25519 \
+        && rm -f /tmp/id_ed25519* \
+        && chmod 644 /root/.ssh/authorized_keys /root/.ssh/id_ed25519.pub \
+    && chmod 400 /root/.ssh/id_ed25519 \
+    && cp -rf /root/.ssh /home/${USERNAME} \
+    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.ssh \
+    
+    # # Configure SSH daemon
+    # sed -i 's/#Port 22/Port '"${SSH_PORT}"'/' /etc/ssh/sshd_config; \
+    # sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config; \
+    # sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config; \
+    # sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config; \
+    # sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config; \
+    # # Allow SSH login for dev user
+    # echo "AllowUsers ${USERNAME} root" >> /etc/ssh/sshd_config; \
+    # # Create systemd service override to use custom port
+    # mkdir -p /etc/systemd/system/sshd.service.d; \
+    # echo -e '[Service]\nExecStart=\nExecStart=/usr/sbin/sshd -D -p '"${SSH_PORT}" > /etc/systemd/system/sshd.service.d/custom-port.conf; \
+    # # Create startup script for SSH
+    # echo '#!/bin/bash' > /usr/local/bin/start-ssh; \
+    # echo '/usr/sbin/sshd -D -p '"${SSH_PORT}"' &' >> /usr/local/bin/start-ssh; \
+    # echo 'exec "$@"' >> /usr/local/bin/start-ssh; \
+    # chmod +x /usr/local/bin/start-ssh; \
+  else \
+    echo "==> Skipping SSH server installation"; \
+  fi
+
+# Expose SSH port
+EXPOSE ${SSH_PORT}
+
+# -----------------------------------------------------------------------------
 # Workspace setup and final cleanup
 # -----------------------------------------------------------------------------
 
@@ -358,5 +411,8 @@ RUN mkdir -p /workspace && chown ${USER_UID}:${USER_GID} /workspace
 
 USER ${USERNAME}
 
-# Keep container alive for dev sessions
+# # Keep container alive for dev sessions
 CMD ["sleep", "infinity"]
+
+# # Start SSH server and keep container alive
+# CMD ["/usr/local/bin/start-ssh", "sleep", "infinity"]
