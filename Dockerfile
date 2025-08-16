@@ -27,7 +27,7 @@ ENV LANG=en_US.UTF-8 \
   LC_ALL=en_US.UTF-8
   
 # Default timezone (can be overridden at build time)
-ARG TZ=Asia/Ho_Chi_Minh
+ARG TZ=UTC
 ENV TZ=${TZ}
 
 # Configure system timezone
@@ -87,7 +87,6 @@ RUN set -eux; \
 # Core system & dev tools (optimized). Toggle optional stacks via ARGs below.
 # -----------------------------------------------------------------------------
       
-
 RUN set -eux; \
   echo "==> Installing minimal system packages for development"; \
   EXTRA_PKGS=""; \
@@ -103,7 +102,7 @@ RUN set -eux; \
     # Networking & diagnostics
     iputils traceroute bind-utils net-tools iproute \
     # Process & system
-    procps-ng psmisc lsof util-linux ncurses \
+    procps-ng psmisc lsof util-linux util-linux-user ncurses \
     # Editors & shells
     vim neovim bash-completion zsh \
     # TUI helpers
@@ -111,7 +110,7 @@ RUN set -eux; \
     # C/C++ build toolchain
     gcc gcc-c++ make automake autoconf libtool pkgconf-pkg-config \
     # Modern CLI utilities
-    fzf ripgrep fd-find bat eza \
+    fzf ripgrep fd-find bat eza fastfetch thefuck tldr zoxide \
     ${EXTRA_PKGS}; \
   \
   # Normalize command names across distros
@@ -268,108 +267,96 @@ RUN set -eux; \
 # # -----------------------------------------------------------------------------
 # LazyVim setup (for the non-root user)
 # -----------------------------------------------------------------------------
+
+# Upgrade Neovim to the latest release (official prebuilt binary)
+RUN set -eux; \
+  dnf remove -y neovim && rm -rf /opt/nvim /opt/nvim-linux-x86_64; \
+  curl -fL -o "/tmp/nvim-linux-x86_64.tar.gz" \
+    https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz; \
+  tar -C /opt -xzf "/tmp/nvim-linux-x86_64.tar.gz"; \
+  ln -sfn /opt/nvim-linux-x86_64 /opt/nvim; \
+  ln -sfn /opt/nvim/bin/nvim /usr/local/bin/nvim; \
+  rm -f "/tmp/nvim-linux-x86_64.tar.gz"
+
 USER ${USERNAME}
 WORKDIR /home/${USERNAME}
 
 RUN set -eux; \
     python3 -m pip install --no-cache-dir --user pynvim; \
     git clone --depth=1 https://github.com/LazyVim/starter ~/.config/nvim; \
-    rm -rf ~/.config/nvim/.git
-    # nvim --headless "+Lazy! sync" +qa || true
+    rm -rf ~/.config/nvim/.git; \
+    nvim --headless "+Lazy! sync" +qa || true
 
 USER root
 
-# # -----------------------------------------------------------------------------
-# # Shell prompt & dotfiles (minimal, fast)
-# # -----------------------------------------------------------------------------
-# RUN set -eux; \
-#     curl -fsSL https://starship.rs/install.sh | sh -s -- -y; \
-#     { \
-#       echo 'export PATH="$HOME/.local/bin:$PATH"'; \
-#       echo 'eval "$(starship init zsh)"'; \
-#       echo 'alias ll="eza -lha --group-directories-first"'; \
-#       echo 'alias cat="bat --paging=never"'; \
-#       echo 'alias vi="nvim"'; \
-#       echo 'alias vim="nvim"'; \
-#       echo '[[ -f /usr/share/fzf/shell/key-bindings.zsh ]] && source /usr/share/fzf/shell/key-bindings.zsh'; \
-#     } >> ~/.zshrc
+# -----------------------------------------------------------------------------
+# Shell prompt & dotfiles (Zinit + plugins)
+# -----------------------------------------------------------------------------
+USER ${USERNAME}
 
-# # -----------------------------------------------------------------------------
-# # Workspace and cleanup
-# # -----------------------------------------------------------------------------
-# USER root
-# RUN mkdir -p /workspace && chown ${USER_UID}:${USER_GID} /workspace; \
-#     dnf clean all; rm -rf /var/cache/dnf/* /root/.cache/*
+RUN set -eux; \
+  # Download and install Starship prompt (modern cross-shell prompt)
+  curl -fsSL https://starship.rs/install.sh | sh -s -- -y; \
+  # Download and install Zinit (fast and feature-rich Zsh plugin manager)
+  curl -fsSL https://raw.githubusercontent.com/zdharma-continuum/zinit/HEAD/scripts/install.sh | bash -s -- -y; \
+  \
+  # Configure Zsh with essential plugins and user-friendly defaults
+  { \
+    echo ''; \
+    # Conditionally add Volta (Node.js) environment if enabled
+    if [ "${INSTALL_VOLTA}" = "1" ]; then \
+    echo '# ==> Volta (Node.js version manager) initialization'; \
+    echo 'export VOLTA_HOME="$HOME/.volta"'; \
+    echo 'export PATH="$VOLTA_HOME/bin:$PATH"'; \
+    echo ''; \
+    echo '# ==> Essential Zsh plugins for enhanced shell experience'; \
+    echo 'zinit load "zsh-users/zsh-syntax-highlighting"  # Syntax highlighting for commands'; \
+    echo 'zinit load "zsh-users/zsh-completions"          # Additional completion definitions'; \
+    echo 'zinit load "zsh-users/zsh-autosuggestions"      # Fish-like autosuggestions'; \
+    echo 'zinit load "zsh-users/zsh-history-substring-search"  # History search with arrows'; \
+    echo 'zinit load "Aloxaf/fzf-tab"                     # Replace tab completion with fzf'; \
+    echo 'zinit load "hlissner/zsh-autopair"              # Auto-close quotes and brackets'; \
+    echo 'zinit load "MichaelAquilina/zsh-you-should-use" # Remind about existing aliases'; \
+    echo ''; \
+    echo '# ==> Modern shell integrations'; \
+    echo 'command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"  # Beautiful prompt'; \
+    echo 'command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"      # Smart cd replacement'; \
+    echo 'command -v thefuck >/dev/null 2>&1 && eval "$(thefuck --alias)"     # Fix command typos'; \
+    echo ''; \
+    echo '# ==> Useful aliases for development workflow'; \
+    echo 'alias ll="eza -lha --group-directories-first"   # Better ls with details'; \
+    echo 'alias ls="eza"                                  # Modern ls replacement'; \
+    echo 'alias cat="bat --paging=never"                 # Syntax-highlighted cat'; \
+    echo 'alias vi="nvim"                                # Use Neovim instead of vi'; \
+    echo 'alias vim="nvim"                               # Use Neovim instead of vim'; \
+    echo 'alias lg="lazygit"                             # Git TUI shortcut'; \
+    echo 'alias ld="lazydocker"                          # Docker TUI shortcut'; \
+    echo ''; \
+    fi; \
+  } >> ~/.zshrc; \
+  # Set up Starship with a beautiful preset theme
+  mkdir -p ~/.config; \
+  starship preset gruvbox-rainbow -o ~/.config/starship.toml;
+
+RUN set -eux; \
+  # Set terminal type to fix tput issues (local to this RUN command)
+  export TERM=xterm-256color; \
+  # Ensure Zinit is initialized and plugins are loaded
+  zsh -c "source ~/.zshrc"
+
+USER root
+
+# -----------------------------------------------------------------------------
+# Workspace setup and final cleanup
+# -----------------------------------------------------------------------------
+
+# Create shared workspace directory with proper ownership
+RUN mkdir -p /workspace && chown ${USER_UID}:${USER_GID} /workspace
+
+# # Clean up package cache and temporary files to reduce image size
+# RUN dnf clean all; rm -rf /var/cache/dnf/* /root/.cache/*
 
 USER ${USERNAME}
-CMD ["/bin/bash"]
 
-
-# ---- System packages -------------------------------------------------
-
-# RUN dnf -y update && \
-#     dnf -y install \
-#       sudo ca-certificates gnupg2 \
-#       git git-lfs openssh-clients \
-#       curl wget unzip zip tar xz bzip2 gzip \
-#       jq which tree rsync \
-#       iputils telnet traceroute bind-utils net-tools \
-#       procps-ng psmisc lsof util-linux \
-#       ncurses \
-#       vim nano less \
-#       zsh bash-completion \
-#       make gcc gcc-c++ automake autoconf libtool pkgconf-pkg-config \
-#       python3 python3-pip python3-virtualenv python3-devel \
-#       golang \
-#       java-17-openjdk java-17-openjdk-devel \
-#       tmux && \
-#     dnf -y module enable nodejs:20 && \
-#     dnf -y install nodejs && \
-#     dnf clean all && rm -rf /var/cache/dnf
-
-# # ---- Global npm CLIs -------------------------------------------------
-# RUN npm -g install yarn pnpm
-
-# # ---- Python toolchain via pipx --------------------------------------
-# ARG PIPX_HOME=/opt/pipx
-# ENV PIPX_HOME=${PIPX_HOME} PIPX_BIN_DIR=/usr/local/bin PATH=${PIPX_BIN_DIR}:$PATH
-# RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel pipx && \
-#     pipx ensurepath && \
-#     pipx install "ansible" && \
-#     pipx install "ansible-lint" && \
-#     pipx install "pre-commit" && \
-#     pipx install "poetry" && \
-#     pipx install "pipenv"
-
-# # ---- Taskfile (go-task) ---------------------------------------------
-# ARG TASK_VERSION=3.40.0
-# RUN curl -fsSL "https://github.com/go-task/task/releases/download/v${TASK_VERSION}/task_linux_amd64.tar.gz" \
-#   | tar -xz -C /usr/local/bin task && chmod +x /usr/local/bin/task
-
-# # ---- yq (YAML processor) --------------------------------------------
-# ARG YQ_VERSION=4.44.3
-# RUN curl -fsSL "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
-#   -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq
-
-# # ---- kubectl & Helm (optional but handy) ----------------------------
-# ARG KUBECTL_VERSION=1.30.4
-# ARG HELM_VERSION=3.15.3
-# RUN curl -fsSL -o /usr/local/bin/kubectl "https://dl.k8s.io/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
-#     chmod +x /usr/local/bin/kubectl && \
-#     curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
-#     | tar -zx --strip-components=1 -C /usr/local/bin linux-amd64/helm
-
-
-# # ---- Git defaults ----------------------------------------------------
-# RUN git config --system init.defaultBranch main && git lfs install --system
-
-# # ---- Workspace defaults ---------------------------------------------
-# WORKDIR /workspace
-# USER ${USERNAME}
-
-# # Useful defaults for fresh containers
-# RUN mkdir -p ~/.cache ~/.ssh && \
-#     printf "Host *\n  StrictHostKeyChecking no\n" > ~/.ssh/config
-
-# # Keep container alive for dev sessions
-# CMD ["sleep", "infinity"]
+# Keep container alive for dev sessions
+CMD ["sleep", "infinity"]

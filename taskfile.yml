@@ -54,6 +54,23 @@ tasks:
         echo "  task compose -- config                     # print resolved config"
         echo ""
 
+  build:
+    cmds:
+      - docker compose build
+
+  up:
+    cmds:
+      - docker compose up -d
+  
+  shell:
+    cmds:
+      - docker compose exec workspace zsh
+
+  reup:
+    cmds:
+      - docker compose down
+      - docker compose up -d
+
   # check:
   #   desc: Check Docker & Compose availability
   #   cmds:

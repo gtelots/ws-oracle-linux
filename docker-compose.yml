@@ -1,30 +1,36 @@
+volumes:
+  home_data:
+
 services:
   workspace:
-    image: gtelmaps/ws-oracle-linux:9
-    container_name: ws-oracle-linux-9
+    image: ${DOCKER_IMAGE_REPOSITORY}:${DOCKER_IMAGE_TAG}
+    container_name: ${DOCKER_CONTAINER_NAME}
     build:
       context: ./
+      args:
+        # Timezone
+        TZ: ${TZ}
+        # User configuration
+        USERNAME: ${USERNAME}
+        USER_UID: ${USER_UID}
+        USER_GID: ${USER_GID}
+        # Python & Ansible
+        INSTALL_PYTHON: ${INSTALL_PYTHON}
+        INSTALL_ANSIBLE: ${INSTALL_ANSIBLE}
+        # Node.js tools
+        INSTALL_VOLTA: ${INSTALL_VOLTA}
+        # CLI tools
+        TASK_VERSION: ${TASK_VERSION}
+        LAZYDOCKER_VERSION: ${LAZYDOCKER_VERSION}
+        YQ_VERSION: ${YQ_VERSION}
+        LAZYGIT_VERSION: ${LAZYGIT_VERSION}
+        # Kubernetes tools
+        INSTALL_K8S: ${INSTALL_K8S}
+        KUBECTL_VERSION: ${KUBECTL_VERSION}
+        HELM_VERSION: ${HELM_VERSION}
+        K9S_VERSION: ${K9S_VERSION}
     restart: unless-stopped
-    # init: true
-    # privileged: true
-    # working_dir: ${APP_CODE_PATH_CONTAINER}
+    working_dir: ${APP_CODE_PATH_CONTAINER}
     tty: true
-    # environment:
-    #   - DOCKER_HOST=tcp://${DOCKER_HOST_IP}:${DOCKER_HOST_PORT}
-    #   - DOCKER_TLS_VERIFY=
-    #   - CHOKIDAR_USEPOLLING=true
-    #   - GIT_USERNAME=${GIT_USERNAME}
-    #   - GIT_EMAIL=${GIT_EMAIL}
-    #   - NODE_OPTIONS=--openssl-legacy-provider
     # volumes:
-    #   # - wsprofile:/home/ubuntu
-    #   - ${APP_CODE_PATH_HOST}:${APP_CODE_PATH_CONTAINER}${APP_CODE_CONTAINER_FLAG}
-    # ports:
-    #   - "${WORKSPACE_SSH_PORT}:22"
-    #   - "${WORKSPACE_SUPERVISOR_PORT}:9001"
-    #   - "8000"
-    #   - "8080"
-    #   - "3000"
-    # networks:
-    #   - shared-proxy
-    #   - default
+    #   - home_data:/home/${USERNAME}
