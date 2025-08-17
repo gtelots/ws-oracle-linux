@@ -100,7 +100,7 @@ RUN set -eux; \
     # Core utilities
     coreutils findutils which rsync jq tree \
     # Networking & diagnostics
-    iputils traceroute bind-utils net-tools iproute \
+    iputils traceroute bind-utils net-tools iproute telnet \
     # Process & system
     procps-ng psmisc lsof util-linux util-linux-user ncurses \
     # Editors & shells
@@ -309,6 +309,7 @@ RUN set -eux; \
     echo 'export VOLTA_HOME="$HOME/.volta"'; \
     echo 'export PATH="$VOLTA_HOME/bin:$PATH"'; \
     echo ''; \
+    fi; \
     echo '# ==> Essential Zsh plugins for enhanced shell experience'; \
     echo 'zinit load "zsh-users/zsh-syntax-highlighting"  # Syntax highlighting for commands'; \
     echo 'zinit load "zsh-users/zsh-completions"          # Additional completion definitions'; \
@@ -332,11 +333,10 @@ RUN set -eux; \
     echo 'alias lg="lazygit"                             # Git TUI shortcut'; \
     echo 'alias ld="lazydocker"                          # Docker TUI shortcut'; \
     echo ''; \
-    fi; \
   } >> ~/.zshrc; \
   # Set up Starship with a beautiful preset theme
   mkdir -p ~/.config; \
-  starship preset gruvbox-rainbow -o ~/.config/starship.toml;
+  starship preset nerd-font-symbols -o ~/.config/starship.toml;
 
 RUN set -eux; \
   # Set terminal type to fix tput issues (local to this RUN command)
@@ -350,51 +350,18 @@ USER root
 # SSH Server Configuration
 # -----------------------------------------------------------------------------
 ARG INSTALL_OPENSSH_SERVER=1
-ARG SSH_PORT=2222
+ARG SSH_PORT=22
 
-COPY .ssh/id_ed25519_all_ws_ol /tmp/id_ed25519
-COPY .ssh/id_ed25519_all_ws_ol.pub /tmp/id_ed25519.pub
+ARG INSTALL_OPENSSH_SERVER=1
+ARG SSH_PORT=22
 
-RUN set -eux; \
-  if [ "${INSTALL_OPENSSH_SERVER}" = "1" ]; then \
-    echo "==> Installing and configuring SSH server"; \
-    # Install OpenSSH server
-    dnf -y install --setopt=install_weak_deps=False --nodocs openssh-server; \
-    # Generate host keys
-    ssh-keygen -A; \
-    # Create SSH directory for dev user
-    mkdir -p /home/${USERNAME}/.ssh; \
-    chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.ssh; \
-    chmod 700 /home/${USERNAME}/.ssh; \
+# Copy SSH keys if they exist (optional - for passwordless access)
+COPY .ssh/ /tmp/.ssh/
 
-    cat /tmp/id_ed25519.pub >> /root/.ssh/authorized_keys \
-        && cat /tmp/id_ed25519.pub >> /root/.ssh/id_ed25519.pub \
-        && cat /tmp/id_ed25519 >> /root/.ssh/id_ed25519 \
-        && rm -f /tmp/id_ed25519* \
-        && chmod 644 /root/.ssh/authorized_keys /root/.ssh/id_ed25519.pub \
-    && chmod 400 /root/.ssh/id_ed25519 \
-    && cp -rf /root/.ssh /home/${USERNAME} \
-    && chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/.ssh \
-    
-    # # Configure SSH daemon
-    # sed -i 's/#Port 22/Port '"${SSH_PORT}"'/' /etc/ssh/sshd_config; \
-    # sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config; \
-    # sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config; \
-    # sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config; \
-    # sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config; \
-    # # Allow SSH login for dev user
-    # echo "AllowUsers ${USERNAME} root" >> /etc/ssh/sshd_config; \
-    # # Create systemd service override to use custom port
-    # mkdir -p /etc/systemd/system/sshd.service.d; \
-    # echo -e '[Service]\nExecStart=\nExecStart=/usr/sbin/sshd -D -p '"${SSH_PORT}" > /etc/systemd/system/sshd.service.d/custom-port.conf; \
-    # # Create startup script for SSH
-    # echo '#!/bin/bash' > /usr/local/bin/start-ssh; \
-    # echo '/usr/sbin/sshd -D -p '"${SSH_PORT}"' &' >> /usr/local/bin/start-ssh; \
-    # echo 'exec "$@"' >> /usr/local/bin/start-ssh; \
-    # chmod +x /usr/local/bin/start-ssh; \
-  else \
-    echo "==> Skipping SSH server installation"; \
-  fi
+# Run SSH setup script with ssh_dir parameter
+COPY scripts/setup-ssh.sh /usr/local/scripts/setup-ssh.sh  
+RUN chmod +x /usr/local/scripts/setup-ssh.sh
+RUN /usr/local/scripts/setup-ssh.sh /tmp/.ssh
 
 # Expose SSH port
 EXPOSE ${SSH_PORT}
@@ -409,10 +376,11 @@ RUN mkdir -p /workspace && chown ${USER_UID}:${USER_GID} /workspace
 # # Clean up package cache and temporary files to reduce image size
 # RUN dnf clean all; rm -rf /var/cache/dnf/* /root/.cache/*
 
-USER ${USERNAME}
+# USER ${USERNAME}
 
 # # Keep container alive for dev sessions
-CMD ["sleep", "infinity"]
+# CMD ["sleep", "infinity"]
 
 # # Start SSH server and keep container alive
 # CMD ["/usr/local/bin/start-ssh", "sleep", "infinity"]
+CMD ["/usr/local/bin/start-sshd"]

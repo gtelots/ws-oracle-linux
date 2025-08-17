@@ -4,19 +4,14 @@
 
 - [ ] Docker in Docker
 - [ ] SSH + SSH pass
+- [ ] SSH by name with SSH Config File
 - [ ] certs
 - [ ] crontab
 - [ ] ngox
 - [ ] tailscale
 - [ ] LazyVim vs AstroNvim vs LunarVim vs NvChad
 - [ ] Docker in docker / dry
-- [ ] NodeJS
-- [ ] Python
-- [ ] PHP / Composer
-- [ ] Go
-- [ ] Rust
-- [ ] Java
-- [ ] Ruby
+- [ ] NodeJS / Python / PHP - Composer / Go / Rust / Java / Ruby -> mise
 - [ ] WP Cli
 - [ ] Terraform
 - [ ] DB Client ?
@@ -25,6 +20,9 @@
 - [ ] DB Beaver ?
 - [ ] Write README.md
 - [ ] Write taskfiles
+- [ ] cloudflare
+- [ ] teleport
+- [ ] dry docker
 
 # Ideas
 
