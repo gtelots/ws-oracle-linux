@@ -1,214 +1,194 @@
-# Taskfile.yml
-version: "3"
+# https://taskfile.dev
 
-# Auto-load environment variables from .env (if present)
+version: '3'
+
+env:
+  DOCKER_BUILDKIT: 1
+
 dotenv: [".env"]
 
-vars:
-  # Path to env file used by docker compose
-  ENV_FILE: '{{.ENV_FILE | default ".env"}}'
-
-  # Space-separated list of compose files; missing files are ignored safely
-  # Example: "docker-compose.yml docker-compose.override.yml docker-compose.prod.yml"
-  COMPOSE_FILES: '{{.COMPOSE_FILES | default "docker-compose.yml docker-compose.override.yml"}}'
-
-  # Compose project name defaults to current folder name
-  PROJECT_NAME:
-    sh: basename "$PWD"
-
 tasks:
-  help:
-    desc: Show common docker compose tasks & usage
+  default:
+    desc: Show available commands
     silent: true
     cmds:
       - |
         echo ""
-        echo "Docker Compose helper via Taskfile"
-        echo "----------------------------------"
-        echo "Usage: task <task> [VAR=val ...] [-- <extra docker compose args>]"
+        echo "Oracle Linux Development Container"
+        echo "=================================="
         echo ""
-        echo "Common:"
-        echo "  task up                # Start all services"
-        echo "  task up SERVICE=web    # Start a specific service"
-        echo "  task down              # Stop & remove containers"
-        echo "  task build             # Build images"
-        echo "  task rebuild           # Build --no-cache & recreate"
-        echo "  task logs SERVICE=web  # Tail logs of a service"
-        echo "  task ps                # Show container status"
-        echo "  task sh SERVICE=web    # Open an interactive shell inside a service"
-        echo "  task exec SERVICE=web CMD='ls -la'  # Run a command inside a service"
-        echo "  task scale SERVICE=web REPLICAS=3   # Scale one service"
-        echo "  task recreate SERVICE=web           # Force recreate"
-        echo "  task prune             # Prune Docker system & volumes (DANGEROUS)"
-        echo "  task compose -- <args> # Run raw 'docker compose <args>'"
+        echo "Container Management"
+        echo "  task up                     Start the development container"
+        echo "  task down                   Stop the development container"
+        echo "  task restart                Restart the development container"
+        echo "  task build                  Build the container image"
+        echo "  task rebuild                Rebuild and restart the container"
         echo ""
-        echo "Vars:"
-        echo "  ENV_FILE=.env"
-        echo "  COMPOSE_FILES='docker-compose.yml docker-compose.override.yml'"
-        echo "  PROJECT_NAME=$(basename \"$PWD\")"
+        echo "Development"
+        echo "  task shell                  Open a shell in the container"
+        echo "  task root                   Open a shell as root user"
+        echo "  task ssh                    SSH into the container"
         echo ""
-        echo "Examples:"
-        echo "  task up -- --profile dev                   # use a profile"
-        echo "  task logs SERVICE=api TAIL=500             # show last 500 lines"
-        echo "  task down VOLUMES=true                     # remove volumes too"
-        echo "  task compose -- config                     # print resolved config"
+        echo "Information"
+        echo "  task ps                     Show container status"
+        echo "  task logs                   Show container logs"
+        echo "  task tools                  List installed tools"
+        echo "  task health                 Check container health"
         echo ""
-
-  build:
-    cmds:
-      - docker compose build
+        echo "Utilities"
+        echo "  task clean                  Clean up Docker resources"
+        echo "  task fresh                  Fresh install (rebuild everything)"
+        echo ""
 
   up:
+    desc: Start the development container
     cmds:
+      - echo "Starting container..."
       - docker compose up -d
-  
+      - echo "Container started successfully!"
+      - echo "SSH access via ssh -p 2222 dev@localhost"
+
+  down:
+    desc: Stop the development container
+    cmds:
+      - echo "Stopping container..."
+      - docker compose down
+      - echo "Container stopped successfully!"
+
+  restart:
+    desc: Restart the development container
+    cmds:
+      - echo "Restarting container..."
+      - docker compose restart
+      - echo "Container restarted successfully!"
+
+  build:
+    desc: Build the container image
+    cmds:
+      - echo "Building container image..."
+      - docker compose build
+      - echo "Build completed successfully!"
+
+  rebuild:
+    desc: Rebuild and restart the container
+    cmds:
+      - echo "Rebuilding container..."
+      - task: down
+      - task: build
+      - task: up
+
+  fresh:
+    desc: Fresh install - rebuild everything from scratch
+    cmds:
+      - echo "Fresh install - cleaning and rebuilding..."
+      - docker compose down -v --remove-orphans
+      - docker system prune -f
+      - docker compose build --no-cache
+      - docker compose up -d
+      - echo "Fresh install completed!"
+
   shell:
+    desc: Open an interactive shell in the container
     cmds:
       - docker compose exec workspace zsh
 
-  reup:
+  root:
+    desc: Open an interactive shell as root user
     cmds:
-      - docker compose down
-      - docker compose up -d
+      - docker compose exec --user root workspace bash
 
-  # check:
-  #   desc: Check Docker & Compose availability
-  #   cmds:
-  #     - docker --version
-  #     - docker compose version
+  ssh:
+    desc: SSH into the container
+    cmds:
+      - ssh -p 2222 dev@localhost
 
-  # # Internal helper: build docker compose CLI args from COMPOSE_FILES + ENV_FILE
-  # _compose:
-  #   internal: true
-  #   silent: true
-  #   cmds:
-  #     - |
-  #       FILE_ARGS=""
-  #       for f in {{.COMPOSE_FILES}}; do
-  #         [ -f "$f" ] && FILE_ARGS="$FILE_ARGS -f $f"
-  #       done
-  #       export COMPOSE_PROJECT_NAME="{{.PROJECT_NAME}}"
-  #       docker compose $FILE_ARGS --env-file {{.ENV_FILE}} {{.CLI_ARGS}}
+  ps:
+    desc: Show container status
+    cmds:
+      - docker compose ps
 
-  # compose:
-  #   desc: Run raw 'docker compose' with CLI_ARGS after '--'
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: '{{.CLI_ARGS}}' }
+  logs:
+    desc: Display container logs
+    cmds:
+      - docker compose logs -f workspace
 
-  # up:
-  #   desc: Start services in background (option: SERVICE=web)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'up -d {{.SERVICE}} {{.EXTRA}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     EXTRA: '{{.EXTRA | default ""}}'
+  tools:
+    desc: List installed development tools
+    cmds:
+      - echo "Development Tools Status"
+      - echo "========================"
+      - |
+        docker compose exec workspace bash -c '
+        echo "Core Tools-"
+        echo "  Python     $(python3 --version 2>/dev/null || echo "Not installed")"
+        echo "  Node.js    $(node --version 2>/dev/null || echo "Not installed")"
+        echo "  Git        $(git --version 2>/dev/null || echo "Not installed")"
+        echo ""
+        echo "CLI Tools-"
+        echo "  task       $(task --version 2>/dev/null || echo "Not installed")"
+        echo "  terraform  $(terraform version 2>/dev/null | head -1 || echo "Not installed")"
+        echo "  wp         $(wp --version 2>/dev/null || echo "Not installed")"
+        echo "  dry        $(dry --version 2>/dev/null || echo "Not installed")"
+        echo "  ngrok      $(ngrok version 2>/dev/null | head -1 || echo "Not installed")"
+        echo ""
+        echo "Services-"
+        if command -v supervisorctl >/dev/null 2>&1; then
+          echo "  Supervisor Installed"
+          supervisorctl status 2>/dev/null || echo "    (not running)"
+        else
+          echo "  Supervisor Not installed"
+        fi
+        '
 
-  # down:
-  #   desc: Stop and remove containers (options: VOLUMES=true, ORPHANS=true)
-  #   cmds:
-  #     - |
-  #       VFLAGS=""
-  #       [ "{{.VOLUMES}}" = "true" ] && VFLAGS="$VFLAGS -v"
-  #       [ "{{.ORPHANS}}" = "true" ] && VFLAGS="$VFLAGS --remove-orphans"
-  #       task _compose -- down $VFLAGS
-  #   vars:
-  #     VOLUMES: '{{.VOLUMES | default "false"}}'
-  #     ORPHANS: '{{.ORPHANS | default "true"}}'
+  health:
+    desc: Check container health and services
+    cmds:
+      - echo "Health Check"
+      - echo "============"
+      - |
+        if docker compose ps | grep -q "Up"; then
+          echo "Container is running"
+          echo ""
+          echo "Service Status-"
+          docker compose exec workspace bash -c '
+          if pgrep sshd >/dev/null; then
+            echo "  SSH        Running"
+          else
+            echo "  SSH        Not running"
+          fi
+          
+          if pgrep supervisord >/dev/null; then
+            echo "  Supervisor Running"
+            supervisorctl status 2>/dev/null | sed "s/^/    /"
+          else
+            echo "  Supervisor Not running"
+          fi
+          
+          if pgrep dockerd >/dev/null; then
+            echo "  Docker     Running"
+          elif command -v docker >/dev/null 2>&1; then
+            echo "  Docker     Installed but not running"
+          else
+            echo "  Docker     Not installed"
+          fi
+          '
+        else
+          echo "Container is not running"
+          echo "Run 'task up' to start the container"
+        fi
 
-  # build:
-  #   desc: Build images (option: SERVICE=web)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'build {{.SERVICE}} {{.EXTRA}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     EXTRA: '{{.EXTRA | default ""}}'
+  clean:
+    desc: Clean up Docker resources
+    cmds:
+      - echo "Cleaning up Docker resources..."
+      - docker system prune -f
+      - echo "Cleanup completed!"
 
-  # rebuild:
-  #   desc: Rebuild images without cache and recreate containers
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'build --no-cache {{.SERVICE}}' }
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'up -d --force-recreate --remove-orphans {{.SERVICE}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-
-  # restart:
-  #   desc: Restart services (option: SERVICE=web)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'restart {{.SERVICE}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-
-  # logs:
-  #   desc: Tail logs (options: SERVICE=web, FOLLOW=true, TAIL=200)
-  #   cmds:
-  #     - |
-  #       F=""
-  #       [ "{{.FOLLOW}}" = "true" ] && F="-f"
-  #       task _compose -- logs --no-log-prefix --timestamps $F --tail={{.TAIL}} {{.SERVICE}}
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     FOLLOW: '{{.FOLLOW | default "true"}}'
-  #     TAIL: '{{.TAIL | default "200"}}'
-
-  # ps:
-  #   desc: Show container status
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'ps' }
-
-  # exec:
-  #   desc: Exec command in a running service (SERVICE=web CMD='bash')
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'exec -it {{.SERVICE}} sh -lc "{{.CMD}}"' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     CMD: '{{.CMD | default "bash || sh"}}'
-
-  # sh:
-  #   desc: Open shell in a running service (SERVICE=web, SHELL=bash)
-  #   cmds:
-  #     - task: exec
-  #       vars:
-  #         SERVICE: '{{.SERVICE}}'
-  #         CMD: '{{.SHELL}}'
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     SHELL: '{{.SHELL | default "bash || sh"}}'
-
-  # pull:
-  #   desc: Pull images (option: SERVICE=web)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'pull {{.SERVICE}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-
-  # recreate:
-  #   desc: Recreate containers without building (option: SERVICE=web)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'up -d --force-recreate --no-deps {{.SERVICE}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-
-  # scale:
-  #   desc: Scale a service (SERVICE=web REPLICAS=3)
-  #   cmds:
-  #     - task: _compose
-  #       vars: { CLI_ARGS: 'up -d --scale {{.SERVICE}}={{.REPLICAS}} {{.SERVICE}}' }
-  #   vars:
-  #     SERVICE: '{{.SERVICE | default ""}}'
-  #     REPLICAS: '{{.REPLICAS | default "1"}}'
-
-  # prune:
-  #   desc: Remove unused containers/images/networks/volumes (DANGEROUS)
-  #   cmds:
-  #     - docker system prune -f
-  #     - docker volume prune -f
+  clean-all:
+    desc: Full cleanup including images and volumes
+    cmds:
+      - echo "Full Docker cleanup..."
+      - docker compose down -v --remove-orphans
+      - docker system prune -af
+      - docker volume prune -f
+      - echo "Full cleanup completed!"

@@ -1,0 +1,54 @@
+# Global Git Configuration
+[user]
+    name = Developer
+    email = dev@workspace.local
+
+[init]
+    defaultBranch = main
+
+[core]
+    editor = nvim
+    autocrlf = input
+    fileMode = false
+
+[pull]
+    rebase = false
+
+[push]
+    default = simple
+    autoSetupRemote = true
+
+[alias]
+    # Basic shortcuts
+    st = status
+    ci = commit
+    co = checkout
+    br = branch
+    
+    # Log shortcuts
+    lg = log --oneline --graph --decorate --all
+    lgs = log --oneline --graph --decorate
+    ll = log --pretty=format:'%C(yellow)%h%Creset %C(blue)%an%Creset %C(green)%cr%Creset %s'
+    
+    # Useful commands
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    visual = !gitk
+    
+    # Branch management
+    cleanup = "!git branch --merged | grep -v '\\*\\|main\\|master\\|develop' | xargs -n 1 git branch -d"
+    
+[color]
+    ui = auto
+    branch = auto
+    diff = auto
+    status = auto
+
+[diff]
+    tool = vimdiff
+
+[merge]
+    tool = vimdiff
+
+[credential]
+    helper = store
