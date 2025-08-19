@@ -1,17 +1,19 @@
 # 🐧 Oracle Linux 9 Development Container
 
-A comprehensive, production-ready development environment built on Oracle Linux 9 with modern tooling, Docker-in-Docker support, and automated setup.
+A comprehensive, production-ready development environment built on Oracle Linux 9 with modern tooling, beautiful UI, and optimized architecture.
 
 ## ✨ **Key Features**
 
-- 🏗️ **Modular Architecture**: Organized scripts for easy maintenance and customization
-- 🐳 **Docker-in-Docker**: Centralized Docker management with context switching
-- 🔧 **Rich Development Tools**: Python, Node.js, Kubernetes tools, databases, and more
-- 🎨 **Modern Shell**: Zsh with Starship prompt, syntax highlighting, and productivity plugins
-- 🔐 **Security First**: SSH server, certificate management, and proper user permissions
+- � **Modern UI Framework**: Gum for beautiful terminal interfaces and interactions
+- �️ **Advanced Terminal**: Zellij multiplexer with vim-style keybindings replacing tmux
+- 🏗️ **Shared Functions Architecture**: Eliminated code duplication with centralized functions
+- 🔧 **Rich Development Tools**: Neovim+LazyVim, Volta+Node.js, Kubernetes tools, databases
+- 🐳 **Docker-in-Docker**: Centralized Docker management with lazy loading
+- ☁️ **Cloud Ready**: AWS CLI, Terraform, and modern DevOps toolchain
+- 🔐 **Security First**: SSH server, certificate management, and proper permissions
 - 📊 **Database Tools**: DBeaver Community Edition for SQL debugging
 - 🌐 **Network Tools**: Ngrok, Tailscale, Cloudflare CLI for connectivity
-- 📦 **Package Managers**: Multiple language package managers (pip, npm, helm, etc.)
+- � **Template Engine**: Gomplate for configuration management
 
 ## 🚀 **Quick Start**
 
@@ -20,13 +22,17 @@ A comprehensive, production-ready development environment built on Oracle Linux 
 git clone <repository-url>
 cd ws-oracle-linux
 
+# Set up SSH keys (optional)
+cp -r .ssh-example .ssh
+# Add your public keys to .ssh/incoming/
+
 # Start the development environment
 task up
 
 # Access the container
 task shell
-# or via SSH
-task ssh
+# or via SSH (password: dev)
+ssh -p 2222 dev@localhost
 ```
 
 ## 📁 **Project Structure**
@@ -197,6 +203,13 @@ INSTALL_DOCKER=1
 - [Configuration Reference](docs/CONFIGURATION.md)
 - [Development Workflow](docs/WORKFLOW.md)
 - [SSH Key Management](.ssh/README.md)
+
+## Repos
+
+- https://github.com/gtelots/ws-oracle-linux/blob/1.0.0/Dockerfile
+- https://github.com/codeopshq/dotfiles
+- https://github.com/wintermi/zsh-starship/blob/main/theme/starship.toml
+- https://dev.to/girordo/a-hands-on-guide-to-setting-up-zsh-oh-my-zsh-asdf-and-spaceship-prompt-with-zinit-for-your-development-environment-91n
 
 ## 🤝 **Contributing**
 

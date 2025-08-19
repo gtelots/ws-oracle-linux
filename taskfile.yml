@@ -90,7 +90,7 @@ tasks:
   shell:
     desc: Open an interactive shell in the container
     cmds:
-      - docker compose exec workspace zsh
+      - docker compose exec workspace bash
 
   root:
     desc: Open an interactive shell as root user

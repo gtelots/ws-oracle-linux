@@ -3,9 +3,8 @@ volumes:
   docker_data:
 
 services:
-  # Docker-in-Docker service for centralized Docker management
   docker-in-docker:
-    image: docker:26.1.4-dind
+    image: docker:dind
     container_name: ${COMPOSE_PROJECT_NAME}-dind
     privileged: true
     restart: unless-stopped
