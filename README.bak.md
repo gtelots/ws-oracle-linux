@@ -3,12 +3,15 @@
 ## Upgrade
 
 - Dùng đường dẫn khác, đừng bỏ trong tmp - /tmp/install-{tool}.lock
+- Bỏ common function vào dotfiles, giúp sử dụng load toàn cục
+- Cài đặt yazi
 - Build testing and validation
 - Performance optimization
 - Comprehensive documentation
 - Regular security updates
 - Test all modular script installations
 - Complete Dockerfile restructuring validation
+- Follow https://github.com/bitnami/containers
 
 ## 🗺️ **Roadmap & Development Plan**
 
