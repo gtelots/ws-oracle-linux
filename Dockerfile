@@ -166,9 +166,13 @@ ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 
 # -----------------------------------------------------------------------------
 # Base OS setup & essential packages
-# Enable EPEL repository for additional packages (tzdata, ca-certificates, etc.)
+# Enhanced package installation using smart pkg-install tool
 # -----------------------------------------------------------------------------
- # Install core tooling first so security flags/plugins are available
+RUN set -euxo pipefail; \
+  ##############################################################################
+  # Stage 1: OS core & repository setup (critical foundation)
+  ##############################################################################
+  # Install core tooling first so security flags/plugins are available
   dnf -y install --setopt=install_weak_deps=False --nodocs \
       dnf-plugins-core ca-certificates tzdata; \
   # Initialize system CA trust (requires ca-certificates)
@@ -177,61 +181,101 @@ ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
   dnf -y update-minimal --security --setopt=install_weak_deps=False || true; \
   # Enable EPEL: prefer oracle-epel-release-el9; if unavailable, enable developer EPEL
   dnf -y install --setopt=install_weak_deps=False --nodocs oracle-epel-release-el9 \
-  || dnf -y config-manager --enable ol9_developer_EPEL; \
-  # Install locale packs (English + Vietnamese)
+    || dnf -y config-manager --enable ol9_developer_EPEL; \
+  \
+  ##############################################################################
+  # Stage 2: Essential system packages (container-safe core utilities)
+  ##############################################################################
   dnf -y install --setopt=install_weak_deps=False --nodocs \
+      # User management & security
+      shadow-utils sudo \
+      # Core file & system utilities
+      coreutils findutils which procps-ng util-linux util-linux-user \
+      # Archive & compression tools
+      tar xz gzip bzip2 unzip zip \
+      # Network utilities (essential for containers)
+      curl wget rsync iproute iputils \
+      # Locale support (English + Vietnamese)
       glibc-langpack-en glibc-langpack-vi; \
+  \
+  ##############################################################################
+  # Stage 3: Development essentials (install after EPEL is enabled)
+  ##############################################################################
+  dnf -y install --setopt=install_weak_deps=False --nodocs \
+      # Security & cryptography
+      gnupg2 openssl ca-certificates \
+      # Version control & SSH
+      git git-lfs openssh-clients \
+      # Text processing & search tools
+      grep sed gawk diffutils patch file less tree jq \
+      # Network diagnostics & tools
+      bind-utils net-tools traceroute nmap-ncat socat \
+      # Process management & monitoring
+      psmisc lsof htop \
+      # Shell & editor environment
+      vim nano bash-completion zsh man-pages \
+      # C/C++ development toolchain
+      gcc gcc-c++ make automake autoconf libtool pkgconf-pkg-config \
+      # Modern build systems
+      cmake ninja-build \
+      # Debugging tools (essential for development)
+      gdb strace; \
+  \
+  ##############################################################################
+  # Final cleanup to minimize image size
+  ##############################################################################
+  dnf clean all; \
+  rm -rf /var/cache/dnf/* /var/tmp/* /tmp/*; \
+  # Create essential directories
+  mkdir -p /usr/local/scripts/tools /usr/local/scripts/setup;
 
-# # -----------------------------------------------------------------------------
-# # Core development packages (cached layer)
-# # Install essential development tools and utilities in optimized order:
-# # - Security & Auth: sudo, ca-certificates, gnupg2
-# # - Version Control: git, git-lfs, openssh-clients  
-# # - File Operations: curl, wget, archives (zip, tar, etc.)
-# # - System Utilities: core GNU tools, process management, networking
-# # - Text Editors: vim, bash-completion, zsh shell
-# # - Build Tools: C/C++ compiler toolchain (gcc, make, autotools)
-# # - User Management: util-linux-user (chsh, chfn commands)
-# # Note: Modern CLI tools (fzf, ripgrep, etc.) are installed via separate scripts
-# # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Core development packages using enhanced pkg-install tool
+# Organized package installation with groups for better maintainability
+# -----------------------------------------------------------------------------
 
-# # Core Security & Networking
-# RUN $PKG --group "Security & Networking" \
-#     ca-certificates gnupg2 openssl \
-#     curl wget rsync openssh-clients
+# Core Security & Networking (essential for all operations)
+RUN pkg-install --group "Security & Networking" \
+    ca-certificates gnupg2 openssl \
+    curl wget rsync openssh-clients
 
-# # Version Control & Development
-# RUN $PKG --group "Version Control" \
-#     git git-lfs
+# Version Control & Development
+RUN pkg-install --group "Version Control" \
+    git git-lfs
 
-# # File Operations & Archives  
-# RUN $PKG --group "File Operations" \
-#     zip unzip tar gzip bzip2 xz
+# File Operations & Archives  
+RUN pkg-install --group "File Operations" \
+    zip unzip tar gzip bzip2 xz
 
-# # System Utilities
-# RUN $PKG --group "System Utilities" \
-#     tree which findutils \
-#     procps-ng psmisc lsof
+# System Utilities
+RUN pkg-install --group "System Utilities" \
+    tree which findutils \
+    procps-ng psmisc lsof htop
 
-# # Text Editors & Shell
-# RUN $PKG --group "Text & Shell" \
-#     vim nano bash-completion zsh \
-#     less man-pages
+# Text Editors & Shell
+RUN pkg-install --group "Text & Shell" \
+    vim nano bash-completion zsh \
+    less man-pages
 
-# # Build Tools & Compilers
-# RUN $PKG --group "Build Tools" \
-#     gcc gcc-c++ make cmake autoconf automake \
-#     libtool pkgconfig
+# Build Tools & Compilers
+RUN pkg-install --group "Build Tools" \
+    gcc gcc-c++ make cmake autoconf automake \
+    libtool pkgconfig ninja-build
 
-# # User Management Tools
-# RUN $PKG util-linux-user
+# Network & Debugging Tools
+RUN pkg-install --group "Network & Debug" \
+    bind-utils net-tools traceroute nmap-ncat socat \
+    gdb strace
 
-# # Python Development (if enabled)
-# RUN if [ "${INSTALL_PYTHON:-1}" = "1" ]; then \
-#         $PKG --group "Python Development" \
-#             python3 python3-pip python3-setuptools \
-#             python3-devel; \
-#     fi
+# User Management Tools
+RUN pkg-install util-linux-user
+
+# Python Development (if enabled)
+RUN if [ "${INSTALL_PYTHON:-1}" = "1" ]; then \
+        pkg-install --group "Python Development" \
+            python3 python3-pip python3-setuptools \
+            python3-devel; \
+    fi
 
 # # -----------------------------------------------------------------------------
 # # Development Tools Installation
