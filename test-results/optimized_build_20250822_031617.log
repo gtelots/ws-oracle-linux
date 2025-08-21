@@ -1,0 +1,167 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.optimized
+#1 transferring dockerfile: 8.31kB 0.0s done
+#1 DONE 0.4s
+
+#2 [internal] load metadata for docker.io/library/oraclelinux:9
+#2 DONE 0.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context:
+#3 transferring context: 2B 0.1s done
+#3 DONE 0.6s
+
+#4 [ 1/11] FROM docker.io/library/oraclelinux:9@sha256:9b94175f751ae45517a7f8bcb1e78a466e0064dd0c7db1fed2a15810f9871311
+#4 resolve docker.io/library/oraclelinux:9@sha256:9b94175f751ae45517a7f8bcb1e78a466e0064dd0c7db1fed2a15810f9871311
+#4 resolve docker.io/library/oraclelinux:9@sha256:9b94175f751ae45517a7f8bcb1e78a466e0064dd0c7db1fed2a15810f9871311 0.4s done
+#4 DONE 0.6s
+
+#4 [ 1/11] FROM docker.io/library/oraclelinux:9@sha256:9b94175f751ae45517a7f8bcb1e78a466e0064dd0c7db1fed2a15810f9871311
+#4 CACHED
+
+#5 [ 2/11] RUN <<EOF (# Update CA certificates first for secure downloads...)
+#5 1.692 + update-ca-trust
+#5 2.600 + dnf -y install --setopt=install_weak_deps=False --nodocs dnf-plugins-core ca-certificates
+#5 6.326 Oracle Linux 9 BaseOS Latest (x86_64)            22 MB/s |  79 MB     00:03    
+#5 15.31 Oracle Linux 9 Application Stream Packages (x86  22 MB/s |  67 MB     00:03    
+#5 23.23 Last metadata expiration check: 0:00:06 ago on Thu Aug 21 20:17:47 2025.
+#5 25.30 Package dnf-plugins-core-4.3.0-20.0.1.el9.noarch is already installed.
+#5 25.30 Package ca-certificates-2024.2.69_v8.0.303-91.4.el9_4.noarch is already installed.
+#5 25.70 Dependencies resolved.
+#5 25.70 Nothing to do.
+#5 25.70 Complete!
+#5 25.73 + dnf -y update-minimal --security --setopt=install_weak_deps=False
+#5 26.06 Last metadata expiration check: 0:00:12 ago on Thu Aug 21 20:17:47 2025.
+#5 26.29 Dependencies resolved.
+#5 26.30 ================================================================================
+#5 26.30  Package         Arch        Version               Repository              Size
+#5 26.30 ================================================================================
+#5 26.30 Upgrading:
+#5 26.30  libarchive      x86_64      3.5.3-6.el9_6         ol9_baseos_latest      394 k
+#5 26.30 
+#5 26.30 Transaction Summary
+#5 26.30 ================================================================================
+#5 26.30 Upgrade  1 Package
+#5 26.30 
+#5 26.30 Total download size: 394 k
+#5 26.30 Downloading Packages:
+#5 26.79 libarchive-3.5.3-6.el9_6.x86_64.rpm             802 kB/s | 394 kB     00:00    
+#5 26.79 --------------------------------------------------------------------------------
+#5 26.79 Total                                           799 kB/s | 394 kB     00:00     
+#5 26.86 Running transaction check
+#5 26.90 Transaction check succeeded.
+#5 26.90 Running transaction test
+#5 26.97 Transaction test succeeded.
+#5 26.97 Running transaction
+#5 28.39   Preparing        :                                                        1/1 
+#5 28.54   Upgrading        : libarchive-3.5.3-6.el9_6.x86_64                        1/2 
+#5 28.76   Cleanup          : libarchive-3.5.3-5.el9_6.x86_64                        2/2 
+#5 28.90   Running scriptlet: libarchive-3.5.3-5.el9_6.x86_64                        2/2 
+#5 30.75   Verifying        : libarchive-3.5.3-6.el9_6.x86_64                        1/2 
+#5 30.75   Verifying        : libarchive-3.5.3-5.el9_6.x86_64                        2/2 
+#5 32.02 
+#5 32.02 Upgraded:
+#5 32.02   libarchive-3.5.3-6.el9_6.x86_64                                               
+#5 32.02 
+#5 32.02 Complete!
+#5 32.91 + dnf -y install --setopt=install_weak_deps=False --nodocs oracle-epel-release-el9
+#5 33.26 Last metadata expiration check: 0:00:19 ago on Thu Aug 21 20:17:47 2025.
+#5 33.49 Dependencies resolved.
+#5 33.50 ================================================================================
+#5 33.50  Package                    Arch      Version        Repository            Size
+#5 33.50 ================================================================================
+#5 33.50 Installing:
+#5 33.50  oracle-epel-release-el9    x86_64    1.0-1.el9      ol9_baseos_latest     14 k
+#5 33.50 
+#5 33.50 Transaction Summary
+#5 33.50 ================================================================================
+#5 33.50 Install  1 Package
+#5 33.50 
+#5 33.50 Total download size: 14 k
+#5 33.50 Installed size: 18 k
+#5 33.50 Downloading Packages:
+#5 33.71 oracle-epel-release-el9-1.0-1.el9.x86_64.rpm     65 kB/s |  14 kB     00:00    
+#5 33.71 --------------------------------------------------------------------------------
+#5 33.71 Total                                            64 kB/s |  14 kB     00:00     
+#5 33.72 Running transaction check
+#5 33.73 Transaction check succeeded.
+#5 33.73 Running transaction test
+#5 33.73 Transaction test succeeded.
+#5 33.73 Running transaction
+#5 34.18   Preparing        :                                                        1/1 
+#5 34.19   Installing       : oracle-epel-release-el9-1.0-1.el9.x86_64               1/1 
+#5 34.79   Verifying        : oracle-epel-release-el9-1.0-1.el9.x86_64               1/1 
+#5 35.42 
+#5 35.42 Installed:
+#5 35.42   oracle-epel-release-el9-1.0-1.el9.x86_64                                      
+#5 35.42 
+#5 35.42 Complete!
+#5 35.66 + dnf clean metadata
+#5 35.77 Cache was expired
+#5 35.79 17 files removed
+#5 DONE 36.5s
+
+#6 [ 3/11] RUN <<EOF (dnf -y install --setopt=install_weak_deps=False --nodocs ...)
+#6 2.176 + dnf -y install --setopt=install_weak_deps=False --nodocs
+#6 2.576 usage: dnf install [-c [config file]] [-q] [-v] [--version]
+#6 2.576                    [--installroot [path]] [--nodocs] [--noplugins]
+#6 2.576                    [--enableplugin [plugin]] [--disableplugin [plugin]]
+#6 2.576                    [--releasever RELEASEVER] [--setopt SETOPTS]
+#6 2.576                    [--skip-broken] [-h] [--allowerasing] [-b | --nobest] [-C]
+#6 2.576                    [-R [minutes]] [-d [debug level]] [--debugsolver]
+#6 2.576                    [--showduplicates] [-e ERRORLEVEL] [--obsoletes]
+#6 2.576                    [--rpmverbosity [debug level name]] [-y] [--assumeno]
+#6 2.576                    [--enablerepo [repo]] [--disablerepo [repo] | --repo
+#6 2.576                    [repo]] [--enable | --disable] [-x [package]]
+#6 2.576                    [--disableexcludes [repo]] [--repofrompath [repo,path]]
+#6 2.576                    [--noautoremove] [--nogpgcheck] [--color COLOR] [--refresh]
+#6 2.576                    [-4] [-6] [--destdir DESTDIR] [--downloadonly]
+#6 2.576                    [--transient] [--comment COMMENT] [--bugfix]
+#6 2.576                    [--enhancement] [--newpackage] [--security]
+#6 2.576                    [--advisory ADVISORY] [--bz BUGZILLA] [--cve CVES]
+#6 2.576                    [--sec-severity {Critical,Important,Moderate,Low}]
+#6 2.576                    [--forcearch ARCH]
+#6 2.576                    PACKAGE [PACKAGE ...]
+#6 2.576 dnf install: error: the following arguments are required: PACKAGE
+#6 ERROR: process "/bin/bash -euxo pipefail -c dnf -y install --setopt=install_weak_deps=False --nodocs \\\n    # User & privilege management (critical for containers)\n    sudo shadow-utils util-linux-user \\\n    # Process management & system monitoring\n    procps-ng psmisc lsof htop \\\n    # File & archive management\n    tar xz gzip bzip2 unzip zip rsync \\\n    # Network utilities (essential for development)\n    wget iproute iputils bind-utils net-tools nmap-ncat \\\n    # Text processing & search tools\n    grep sed gawk diffutils patch file less tree jq \\\n    # Locale support for international development\n    glibc-langpack-en glibc-langpack-vi \\\n    # System utilities\n    which findutils coreutils ncurses\n" did not complete successfully: exit code: 2
+------
+ > [ 3/11] RUN <<EOF (dnf -y install --setopt=install_weak_deps=False --nodocs ...):
+2.576                    [--disableexcludes [repo]] [--repofrompath [repo,path]]
+2.576                    [--noautoremove] [--nogpgcheck] [--color COLOR] [--refresh]
+2.576                    [-4] [-6] [--destdir DESTDIR] [--downloadonly]
+2.576                    [--transient] [--comment COMMENT] [--bugfix]
+2.576                    [--enhancement] [--newpackage] [--security]
+2.576                    [--advisory ADVISORY] [--bz BUGZILLA] [--cve CVES]
+2.576                    [--sec-severity {Critical,Important,Moderate,Low}]
+2.576                    [--forcearch ARCH]
+2.576                    PACKAGE [PACKAGE ...]
+2.576 dnf install: error: the following arguments are required: PACKAGE
+------
+
+ [33m2 warnings found (use docker --debug to expand):
+[0m - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "ROOT_PASSWORD") (line 23)
+ - SecretsUsedInArgOrEnv: Do not use ARG or ENV instructions for sensitive data (ARG "USER_PASSWORD") (line 24)
+Dockerfile.optimized:62
+--------------------
+  61 |     # =============================================================================
+  62 | >>> RUN <<EOF
+  63 | >>> dnf -y install --setopt=install_weak_deps=False --nodocs \
+  64 | >>>     # User & privilege management (critical for containers)
+  65 | >>>     sudo shadow-utils util-linux-user \
+  66 | >>>     # Process management & system monitoring
+  67 | >>>     procps-ng psmisc lsof htop \
+  68 | >>>     # File & archive management
+  69 | >>>     tar xz gzip bzip2 unzip zip rsync \
+  70 | >>>     # Network utilities (essential for development)
+  71 | >>>     wget iproute iputils bind-utils net-tools nmap-ncat \
+  72 | >>>     # Text processing & search tools
+  73 | >>>     grep sed gawk diffutils patch file less tree jq \
+  74 | >>>     # Locale support for international development
+  75 | >>>     glibc-langpack-en glibc-langpack-vi \
+  76 | >>>     # System utilities
+  77 | >>>     which findutils coreutils ncurses
+  78 | >>> EOF
+  79 |     
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -euxo pipefail -c dnf -y install --setopt=install_weak_deps=False --nodocs \\\n    # User & privilege management (critical for containers)\n    sudo shadow-utils util-linux-user \\\n    # Process management & system monitoring\n    procps-ng psmisc lsof htop \\\n    # File & archive management\n    tar xz gzip bzip2 unzip zip rsync \\\n    # Network utilities (essential for development)\n    wget iproute iputils bind-utils net-tools nmap-ncat \\\n    # Text processing & search tools\n    grep sed gawk diffutils patch file less tree jq \\\n    # Locale support for international development\n    glibc-langpack-en glibc-langpack-vi \\\n    # System utilities\n    which findutils coreutils ncurses\n" did not complete successfully: exit code: 2

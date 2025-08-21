@@ -1,0 +1,91 @@
+=== Oracle Linux 9 Base Image Analysis ===
+Timestamp: Fri Aug 22 03:16:17 AM +07 2025
+Image: oraclelinux:9
+
+=== Package Count ===
+187
+
+=== Available Groups ===
+Oracle Linux 9 BaseOS Latest (x86_64)            22 MB/s |  79 MB     00:03    
+Oracle Linux 9 Application Stream Packages (x86  18 MB/s |  67 MB     00:03    
+Last metadata expiration check: 0:00:06 ago on Thu Aug 21 20:16:40 2025.
+Available Environment Groups:
+   Server with GUI
+   Server
+   Minimal Install
+   Workstation
+   Custom Operating System
+   Virtualization Host
+Available Groups:
+   Legacy UNIX Compatibility
+   Console Internet Tools
+   Container Management
+   Development Tools
+   .NET Development
+   Graphical Administration Tools
+   Headless Management
+   Network Servers
+   RPM Development Tools
+   Scientific Support
+   Security Tools
+   Smart Card Support
+   System Tools
+
+=== Development Tools Group Info ===
+Oracle Linux 9 BaseOS Latest (x86_64)            22 MB/s |  79 MB     00:03    
+Oracle Linux 9 Application Stream Packages (x86  20 MB/s |  67 MB     00:03    
+Last metadata expiration check: 0:00:06 ago on Thu Aug 21 20:17:10 2025.
+Group: Development Tools
+ Description: A basic development environment.
+ Mandatory Packages:
+   autoconf
+   automake
+   binutils
+   bison
+   flex
+   gcc
+   gcc-c++
+   gdb
+   glibc-devel
+   libtool
+   make
+   pkgconf
+   pkgconf-m4
+   pkgconf-pkg-config
+   redhat-rpm-config
+   rpm-build
+   rpm-sign
+   strace
+ Default Packages:
+   asciidoc
+   byacc
+   diffstat
+   git
+   intltool
+   jna
+   ltrace
+   patchutils
+   perl-Fedora-VSP
+   perl-generators
+   pesign
+   source-highlight
+   systemtap
+   valgrind
+   valgrind-devel
+ Optional Packages:
+   cmake
+   dtrace
+   expect
+   rpmdevtools
+   rpmlint
+
+=== Missing Essential Tools ===
+Checking for essential tools:
+❌ $tool: missing
+❌ $tool: missing
+❌ $tool: missing
+❌ $tool: missing
+❌ $tool: missing
+❌ $tool: missing
+✅ $tool: available
+❌ $tool: missing

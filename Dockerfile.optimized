@@ -1,0 +1,202 @@
+# =============================================================================
+# Optimized Oracle Linux 9 Development Container
+# =============================================================================
+# Production-ready development environment with comprehensive package coverage
+# Optimized for Docker layer caching and minimal image size
+# =============================================================================
+
+ARG ORACLE_LINUX_IMAGE=oraclelinux
+ARG ORACLE_LINUX_VERSION=9
+FROM ${ORACLE_LINUX_IMAGE}:${ORACLE_LINUX_VERSION} AS base
+
+LABEL maintainer="Oracle Linux DevContainer Team"
+LABEL version="2.0.0"
+LABEL description="Comprehensive Oracle Linux 9 development environment"
+
+# =============================================================================
+# Build Arguments & Configuration
+# =============================================================================
+ARG TZ=UTC
+ARG USERNAME=dev
+ARG USER_UID=1000
+ARG USER_GID=1000
+ARG ROOT_PASSWORD=root
+ARG USER_PASSWORD=dev
+
+# Development tool versions
+ARG INSTALL_PYTHON=1
+ARG INSTALL_NODEJS=1
+ARG INSTALL_ENHANCED_TOOLS=1
+
+# =============================================================================
+# Shell Configuration for Safer Builds
+# =============================================================================
+SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
+
+# =============================================================================
+# Stage 1: Repository Setup & Core System Foundation
+# =============================================================================
+RUN <<EOF
+# Update CA certificates first for secure downloads
+update-ca-trust
+
+# Install essential repository management tools
+dnf -y install --setopt=install_weak_deps=False --nodocs \
+    dnf-plugins-core ca-certificates
+
+# Apply security updates only (avoid full system upgrade in containers)
+dnf -y update-minimal --security --setopt=install_weak_deps=False || true
+
+# Enable EPEL repository for additional packages
+dnf -y install --setopt=install_weak_deps=False --nodocs \
+    oracle-epel-release-el9 || \
+    dnf -y config-manager --enable ol9_developer_EPEL
+
+# Clean metadata cache to ensure fresh package info
+dnf clean metadata
+EOF
+
+# =============================================================================
+# Stage 2: Core System Packages (Essential Missing from Base)
+# =============================================================================
+RUN <<EOF
+dnf -y install --setopt=install_weak_deps=False --nodocs \
+    sudo shadow-utils util-linux-user \
+    procps-ng psmisc lsof htop \
+    tar xz gzip bzip2 unzip zip rsync \
+    wget iproute iputils bind-utils net-tools nmap-ncat \
+    grep sed gawk diffutils patch file less tree jq \
+    glibc-langpack-en glibc-langpack-vi \
+    which findutils coreutils ncurses
+EOF
+
+# =============================================================================
+# Stage 3: Development Environment Essentials
+# =============================================================================
+RUN <<EOF
+dnf -y install --setopt=install_weak_deps=False --nodocs \
+    vim-enhanced nano \
+    git git-lfs \
+    gnupg2 openssl openssh-clients \
+    bash-completion zsh man-pages man-db \
+    info
+EOF
+
+# =============================================================================
+# Stage 4: Build Tools & Compilers (Development Tools Group)
+# =============================================================================
+RUN <<EOF
+dnf -y groupinstall "Development Tools" --setopt=install_weak_deps=False --nodocs
+
+dnf -y install --setopt=install_weak_deps=False --nodocs \
+    cmake \
+    kernel-headers \
+    openssl-devel \
+    zlib-devel \
+    libcurl-devel \
+    ncurses-devel
+EOF
+
+# =============================================================================
+# Stage 5: Enhanced Development Tools (Optional but Recommended)
+# =============================================================================
+RUN <<EOF
+if [ "${INSTALL_ENHANCED_TOOLS}" = "1" ]; then
+    dnf -y install --setopt=install_weak_deps=False --nodocs \
+        valgrind perf \
+        ncdu \
+        tcpdump wireshark-cli \
+        podman buildah skopeo \
+        tmux screen
+fi
+EOF
+
+# =============================================================================
+# Stage 6: Language Runtimes (Conditional Installation)
+# =============================================================================
+RUN <<EOF
+if [ "${INSTALL_PYTHON}" = "1" ]; then
+    dnf -y install --setopt=install_weak_deps=False --nodocs \
+        python3 python3-pip python3-devel python3-setuptools
+fi
+
+if [ "${INSTALL_NODEJS}" = "1" ]; then
+    dnf -y install --setopt=install_weak_deps=False --nodocs \
+        nodejs npm
+fi
+EOF
+
+# =============================================================================
+# Stage 7: User Setup & Environment Configuration
+# =============================================================================
+RUN <<EOF
+groupadd --gid ${USER_GID} ${USERNAME}
+useradd --uid ${USER_UID} --gid ${USER_GID} --create-home --shell /bin/bash ${USERNAME}
+
+echo "root:${ROOT_PASSWORD}" | chpasswd
+echo "${USERNAME}:${USER_PASSWORD}" | chpasswd
+
+echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/99-${USERNAME}
+chmod 0440 /etc/sudoers.d/99-${USERNAME}
+
+mkdir -p /home/${USERNAME}/.local/bin
+chown -R ${USER_UID}:${USER_GID} /home/${USERNAME}/.local
+chmod -R u+rwX /home/${USERNAME}/.local
+
+mkdir -p /workspace
+chown ${USER_UID}:${USER_GID} /workspace
+EOF
+
+# =============================================================================
+# Stage 8: System Configuration & Optimization
+# =============================================================================
+RUN <<EOF
+ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime
+echo ${TZ} > /etc/timezone
+
+echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+echo 'LC_ALL=en_US.UTF-8' >> /etc/locale.conf
+
+git config --system init.defaultBranch main
+git config --system pull.rebase false
+git config --system core.autocrlf input
+
+echo 'export EDITOR=vim' >> /etc/profile.d/editor.sh
+echo 'export VISUAL=vim' >> /etc/profile.d/editor.sh
+EOF
+
+# =============================================================================
+# Stage 9: Final Cleanup & Optimization
+# =============================================================================
+RUN <<EOF
+dnf clean all
+rm -rf /var/cache/dnf/*
+
+rm -rf /var/tmp/* /tmp/*
+
+find /var/log -type f -exec truncate -s 0 {} \;
+
+rm -rf /usr/share/doc/* /usr/share/man/man*/ || true
+
+ldconfig
+EOF
+
+# =============================================================================
+# Runtime Configuration
+# =============================================================================
+# Set environment variables
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8 \
+    TZ=${TZ} \
+    PATH="/home/${USERNAME}/.local/bin:${PATH}" \
+    EDITOR=vim \
+    VISUAL=vim
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to non-root user for security
+USER ${USERNAME}
+
+# Default command
+CMD ["bash", "-l"]
