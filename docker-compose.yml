@@ -24,6 +24,7 @@ services:
     container_name: ${DOCKER_CONTAINER_NAME}
     build:
       context: ./
+      dockerfile: Dockerfile.base
       args:
         # Timezone
         TZ: ${TZ}
