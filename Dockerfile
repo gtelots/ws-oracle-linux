@@ -179,54 +179,49 @@ RUN set -euxo pipefail; \
     dnf -y update-minimal --security --setopt=install_weak_deps=False || true; \
     # Enable EPEL: prefer oracle-epel-release-el9; if unavailable, enable developer EPEL
     dnf -y install --setopt=install_weak_deps=False --nodocs oracle-epel-release-el9 \
-			|| dnf -y config-manager --enable ol9_developer_EPEL; \
-    \
-    ##############################################################################
-    # Stage 2: Essential system packages (container-safe core utilities)
-    ##############################################################################
-    dnf -y install --setopt=install_weak_deps=False --nodocs \
-			# User management & security
-			shadow-utils sudo \
-			# Core file & system utilities
-			coreutils findutils which procps-ng util-linux util-linux-user \
-			# Archive & compression tools
-			tar xz gzip bzip2 unzip zip \
-			# Network utilities (essential for containers)
-			curl wget rsync iproute iputils \
-			# Locale support (English + Vietnamese)
-			glibc-langpack-en glibc-langpack-vi; \
-    \
-    ##############################################################################
-    # Stage 3: Development essentials (install after EPEL is enabled)
-    ##############################################################################
-    dnf -y install --setopt=install_weak_deps=False --nodocs \
-			# Security & cryptography
-			gnupg2 openssl ca-certificates \
-			# Version control & SSH
-			git git-lfs openssh-clients \
-			# Text processing & search tools
-			grep sed gawk diffutils patch file less tree jq \
-			# Network diagnostics & tools
-			bind-utils net-tools traceroute nmap-ncat socat \
-			# Process management & monitoring
-			psmisc lsof htop \
-			# Shell & editor environment
-			vim nano bash-completion zsh man-pages \
-			# C/C++ development toolchain
-			gcc gcc-c++ make automake autoconf libtool pkgconf-pkg-config \
-			# Modern build systems
-			cmake \
-			# Debugging tools (essential for development)
-			gdb strace;
+			|| dnf -y config-manager --enable ol9_developer_EPEL; 
+#     \
+#     ##############################################################################
+#     # Stage 2: Essential system packages
+#     ##############################################################################
+#     dnf -y install --setopt=install_weak_deps=False --nodocs \
+# 			tar xz gzip bzip2 unzip zip \
+# 			# Network utilities (essential for containers)
+# 			curl wget rsync iproute iputils \ 
+# 			# Locale support (English + Vietnamese)
+# 			glibc-langpack-en glibc-langpack-vi; \
+#     \
+#     ##############################################################################
+#     # Stage 3: Development essentials (install after EPEL is enabled)
+#     ##############################################################################
+#     dnf -y install --setopt=install_weak_deps=False --nodocs \
+# 			# Security & cryptography
+# 			gnupg2 openssl ca-certificates \
+# 			# Version control & SSH
+# 			git git-lfs openssh-clients \
+# 			# Text processing & search tools
+# 			grep sed gawk diffutils patch file less tree jq \
+# 			# Network diagnostics & tools
+# 			bind-utils net-tools traceroute nmap-ncat socat \
+# 			# Process management & monitoring
+# 			psmisc lsof htop \
+# 			# Shell & editor environment
+# 			vim nano bash-completion zsh man-pages \
+# 			# C/C++ development toolchain
+# 			gcc gcc-c++ make automake autoconf libtool pkgconf-pkg-config \
+# 			# Modern build systems
+# 			cmake \
+# 			# Debugging tools (essential for development)
+# 			gdb strace;
     
-# -----------------------------------------------------------------------------
-# Final cleanup to minimize image size
-# -----------------------------------------------------------------------------
-RUN dnf clean all; \
-			rm -rf /var/cache/dnf/* /var/tmp/* /tmp/*;
+# # -----------------------------------------------------------------------------
+# # Final cleanup to minimize image size
+# # -----------------------------------------------------------------------------
+# RUN dnf clean all; \
+# 			rm -rf /var/cache/dnf/* /var/tmp/* /tmp/*;
 
-# Add user's local bin to PATH
-ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
+# # Add user's local bin to PATH
+# ENV PATH="/home/${USERNAME}/.local/bin:${PATH}"
 
 # Switch to non-root user for security
 USER ${USERNAME}
