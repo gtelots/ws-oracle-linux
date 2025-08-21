@@ -1,0 +1,6 @@
+# Enhanced pkg-install test packages
+curl
+wget
+git
+vim
+nano

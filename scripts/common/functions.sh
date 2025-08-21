@@ -1,19 +1,42 @@
 #!/bin/bash
-
 # =============================================================================
-# Shared Functions for Oracle Linux Development Environment
+# Base Functions Loader - Load all common functions
 # =============================================================================
+# This is the main entry point for loading all common functions.
+# Scripts should source this file to get access to all functionality.
 
 set -euo pipefail
 
-# Colors for output
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly PURPLE='\033[0;35m'
-readonly CYAN='\033[0;36m'
-readonly NC='\033[0m' # No Color
+# Get the directory of this script
+COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load all function modules in dependency order
+source "$COMMON_DIR/logging.sh"    # Logging functions (no dependencies)
+source "$COMMON_DIR/utils.sh"      # Utility functions (depends on logging)
+source "$COMMON_DIR/ui.sh"         # UI functions (depends on logging)
+source "$COMMON_DIR/system-functions.sh"  # System functions (depends on logging)
+source "$COMMON_DIR/user-functions.sh"    # User functions (depends on logging & system)
+
+# Global configuration that affects all modules
+export DEBUG="${DEBUG:-false}"
+export FORCE="${FORCE:-false}"
+export QUIET="${QUIET:-false}"
+
+# Version information
+readonly COMMON_FUNCTIONS_VERSION="2.0.0"
+
+# Function to display version and loaded modules
+show_common_functions_info() {
+    if [[ "${DEBUG:-false}" == "true" ]]; then
+        log_debug "Common Functions v$COMMON_FUNCTIONS_VERSION loaded"
+        log_debug "Modules: logging, utils, ui, system-functions, user-functions"
+        log_debug "GUM support: $([[ "$GUM_AVAILABLE" == "true" ]] && echo "enabled" || echo "disabled")"
+        log_debug "Debug mode: $DEBUG"
+    fi
+}
+
+# Auto-display info if DEBUG is enabled
+show_common_functions_info
 
 # Check if gum is available for enhanced UI
 GUM_AVAILABLE=false

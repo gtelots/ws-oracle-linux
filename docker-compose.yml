@@ -31,6 +31,8 @@ services:
         USERNAME: ${USERNAME}
         USER_UID: ${USER_UID}
         USER_GID: ${USER_GID}
+        ROOT_PASSWORD: ${ROOT_PASSWORD}
+        USER_PASSWORD: ${USER_PASSWORD}
         # Core development tools
         INSTALL_PYTHON: ${INSTALL_PYTHON}
         INSTALL_ANSIBLE: ${INSTALL_ANSIBLE}
