@@ -1,0 +1,232 @@
+# Task automation for Oracle Linux 9 Development Container
+# Following Laravel Homestead workflow patterns and enterprise best practices
+version: '3'
+
+vars:
+  CONTAINER_NAME: oracle-linux-dev
+  IMAGE_NAME: oracle-linux-dev
+  IMAGE_TAG: latest
+  REGISTRY: localhost
+  WORKSPACE_DIR: /workspace
+  CONTAINER_USER: developer
+  CONTAINER_PORT: 8080
+  SSH_PORT: 2222
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+tasks:
+  # =============================================================================
+  # Container Lifecycle Management
+  # =============================================================================
+  
+  build:
+    desc: Build the Oracle Linux 9 development container
+    cmds:
+      - echo "🏗️  Building Oracle Linux 9 development container..."
+      - |
+        docker build \
+          --build-arg BUILDKIT_INLINE_CACHE=1 \
+          --cache-from {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} \
+          --tag {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} \
+          --tag {{.REGISTRY}}/{{.IMAGE_NAME}}:latest \
+          .
+      - echo "✅ Container built successfully"
+
+  build-no-cache:
+    desc: Build container without cache (clean build)
+    cmds:
+      - echo "🏗️  Building Oracle Linux 9 container (no cache)..."
+      - |
+        docker build \
+          --no-cache \
+          --tag {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} \
+          --tag {{.REGISTRY}}/{{.IMAGE_NAME}}:latest \
+          .
+      - echo "✅ Clean build completed"
+
+  run:
+    desc: Run the development container interactively
+    deps: [build]
+    cmds:
+      - echo "🚀 Starting Oracle Linux 9 development container..."
+      - |
+        docker run -it --rm \
+          --name {{.CONTAINER_NAME}} \
+          --hostname oracle-dev \
+          --user {{.CONTAINER_USER}} \
+          -v $(pwd):{{.WORKSPACE_DIR}} \
+          -v ~/.ssh:/home/{{.CONTAINER_USER}}/.ssh:ro \
+          -v ~/.gitconfig:/home/{{.CONTAINER_USER}}/.gitconfig:ro \
+          -p {{.CONTAINER_PORT}}:8080 \
+          -p {{.SSH_PORT}}:22 \
+          --env-file .env \
+          {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}
+
+  run-daemon:
+    desc: Run container as daemon service
+    deps: [build]
+    cmds:
+      - echo "🔄 Starting container as daemon..."
+      - |
+        docker run -d \
+          --name {{.CONTAINER_NAME}}-daemon \
+          --hostname oracle-dev \
+          --user {{.CONTAINER_USER}} \
+          -v $(pwd):{{.WORKSPACE_DIR}} \
+          -v ~/.ssh:/home/{{.CONTAINER_USER}}/.ssh:ro \
+          -p {{.CONTAINER_PORT}}:8080 \
+          -p {{.SSH_PORT}}:22 \
+          --env-file .env \
+          --restart unless-stopped \
+          {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} \
+          tail -f /dev/null
+      - echo "✅ Daemon container started"
+
+  shell:
+    desc: Execute shell in running container
+    cmds:
+      - echo "🐚 Connecting to container shell..."
+      - docker exec -it {{.CONTAINER_NAME}} /bin/bash
+
+  stop:
+    desc: Stop running containers
+    cmds:
+      - echo "🛑 Stopping containers..."
+      - docker stop {{.CONTAINER_NAME}} 2>/dev/null || true
+      - docker stop {{.CONTAINER_NAME}}-daemon 2>/dev/null || true
+      - echo "✅ Containers stopped"
+
+  clean:
+    desc: Clean up containers and images
+    cmds:
+      - echo "🧹 Cleaning up containers and images..."
+      - docker rm -f {{.CONTAINER_NAME}} 2>/dev/null || true
+      - docker rm -f {{.CONTAINER_NAME}}-daemon 2>/dev/null || true
+      - docker rmi {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} 2>/dev/null || true
+      - docker system prune -f
+      - echo "✅ Cleanup completed"
+
+  # =============================================================================
+  # Development and Testing
+  # =============================================================================
+
+  test:
+    desc: Run container tests and validation
+    deps: [build]
+    cmds:
+      - echo "🧪 Running container tests..."
+      - task: test-security
+      - task: test-functionality
+      - task: test-performance
+      - echo "✅ All tests passed"
+
+  test-security:
+    desc: Run security tests
+    cmds:
+      - echo "🔒 Running security tests..."
+      - docker run --rm {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} /opt/scripts/security-check.sh
+
+  test-functionality:
+    desc: Test container functionality
+    cmds:
+      - echo "⚙️  Testing functionality..."
+      - docker run --rm {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} /opt/scripts/functionality-test.sh
+
+  test-performance:
+    desc: Run performance benchmarks
+    cmds:
+      - echo "📊 Running performance tests..."
+      - docker run --rm {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}} /opt/scripts/performance-test.sh
+
+  lint:
+    desc: Lint Dockerfile and configuration files
+    cmds:
+      - echo "🔍 Linting Dockerfile..."
+      - docker run --rm -i hadolint/hadolint < Dockerfile
+      - echo "🔍 Linting shell scripts..."
+      - find scripts/ -name "*.sh" -exec shellcheck {} \;
+      - echo "✅ Linting completed"
+
+  # =============================================================================
+  # Maintenance and Operations
+  # =============================================================================
+
+  logs:
+    desc: View container logs
+    cmds:
+      - docker logs -f {{.CONTAINER_NAME}}-daemon
+
+  health:
+    desc: Check container health status
+    cmds:
+      - echo "🏥 Checking container health..."
+      - docker inspect --format='{{.State.Health.Status}}' {{.CONTAINER_NAME}}-daemon
+
+  update:
+    desc: Update base images and rebuild
+    cmds:
+      - echo "🔄 Updating base images..."
+      - docker pull oraclelinux:9-slim
+      - task: build-no-cache
+      - echo "✅ Update completed"
+
+  backup:
+    desc: Backup container configuration and data
+    cmds:
+      - echo "💾 Creating backup..."
+      - mkdir -p backups/$(date +%Y%m%d_%H%M%S)
+      - tar -czf backups/$(date +%Y%m%d_%H%M%S)/config-backup.tar.gz \
+          Dockerfile Taskfile.yml .env.example scripts/ dotfiles/ .ssh/ ca-certificates/
+      - echo "✅ Backup created"
+
+  # =============================================================================
+  # Registry Operations
+  # =============================================================================
+
+  push:
+    desc: Push image to registry
+    deps: [build]
+    cmds:
+      - echo "📤 Pushing image to registry..."
+      - docker push {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}
+      - docker push {{.REGISTRY}}/{{.IMAGE_NAME}}:latest
+      - echo "✅ Image pushed successfully"
+
+  pull:
+    desc: Pull image from registry
+    cmds:
+      - echo "📥 Pulling image from registry..."
+      - docker pull {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}
+      - echo "✅ Image pulled successfully"
+
+  # =============================================================================
+  # Development Shortcuts
+  # =============================================================================
+
+  dev:
+    desc: Quick development setup (build and run)
+    cmds:
+      - task: build
+      - task: run
+
+  reset:
+    desc: Reset development environment
+    cmds:
+      - task: stop
+      - task: clean
+      - task: build
+      - echo "✅ Development environment reset"
+
+  info:
+    desc: Display container and system information
+    cmds:
+      - echo "📋 Container Information:"
+      - echo "  Image: {{.REGISTRY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}"
+      - echo "  Container: {{.CONTAINER_NAME}}"
+      - echo "  Ports: {{.CONTAINER_PORT}}:8080, {{.SSH_PORT}}:22"
+      - echo "  Workspace: {{.WORKSPACE_DIR}}"
+      - echo ""
+      - docker images | grep {{.IMAGE_NAME}} || echo "  No images found"
+      - docker ps -a | grep {{.CONTAINER_NAME}} || echo "  No containers found"

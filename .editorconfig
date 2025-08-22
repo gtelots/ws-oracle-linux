@@ -1,0 +1,67 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# =============================================================================
+# Universal Settings - Apply to all files
+# =============================================================================
+[*]
+# Character encoding
+charset = utf-8
+# End of line character (LF for Unix/Linux)
+end_of_line = lf
+# Ensure file ends with a newline
+insert_final_newline = true
+# Remove trailing whitespace
+trim_trailing_whitespace = true
+# Default indentation (can be overridden per file type)
+indent_style = space
+indent_size = 2
+# Maximum line length (for code formatting)
+max_line_length = 80
+
+# =============================================================================
+# Documentation & Configuration Files
+# =============================================================================
+
+# Markdown files
+[*.{md,markdown}]
+# Don't trim trailing whitespace in markdown (breaks line breaks)
+trim_trailing_whitespace = false
+
+# YAML, JSON, TOML files use default 2 spaces - no override needed
+# [*.{yml,yaml,json,toml}] - uses defaults
+
+# =============================================================================
+# Shell & Scripts - use defaults (2 spaces)
+# =============================================================================
+# [*.{sh,bash,zsh,fish}] - uses defaults
+
+# =============================================================================
+# Infrastructure & DevOps - use defaults (2 spaces)
+# =============================================================================
+# [Dockerfile*, docker-compose*.{yml,yaml}, *.{tf,tfvars}] - uses defaults
+
+# =============================================================================
+# Programming Languages - Only override when different from default
+# =============================================================================
+
+# Python - uses 4 spaces (PEP 8)
+[*.{py,pyi}]
+indent_size = 4
+max_line_length = 88  # Black formatter default
+
+# =============================================================================
+# Configuration Files with Special Requirements
+# =============================================================================
+
+# Environment files - keep comment alignment
+[*.env*]
+trim_trailing_whitespace = false
+
+# Log files - preserve formatting
+[*.{log,logs}]
+trim_trailing_whitespace = false
+insert_final_newline = false
+

@@ -1,0 +1,35 @@
+#!/bin/sh
+# Copyright Broadcom, Inc. All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+set -eu
+
+n=0
+max=2
+
+until [ "$n" -gt "$max" ]; do
+  set +e
+  (
+    dnf -y makecache --refresh
+    
+    dnf -y \
+      --setopt=install_weak_deps=False \
+      --setopt=tsflags=nodocs \
+      install "$@"
+  )
+  CODE=$?
+  set -e
+
+  if [ "$CODE" -eq 0 ]; then
+    break
+  fi
+
+  if [ "$n" -eq "$max" ]; then
+    exit "$CODE"
+  fi
+
+  echo "dnf failed, retrying"
+  n=$((n + 1))
+done
+
+dnf -y clean all
+rm -rf /var/cache/dnf /var/cache/yum

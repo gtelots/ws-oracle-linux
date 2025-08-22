@@ -1,0 +1,128 @@
+# https://taskfile.dev
+
+version: '3'
+
+env:
+  DOCKER_BUILDKIT: 1
+
+dotenv: [".env"]
+
+tasks:
+  default:
+    desc: Show available commands
+    silent: true
+    cmds:
+      - |
+        echo ""
+        echo "Oracle Linux Development Container"
+        echo "=================================="
+        echo ""
+        echo "Container Management"
+        echo "  task up                     Start the development container"
+        echo "  task down                   Stop the development container"
+        echo "  task restart                Restart the development container"
+        echo "  task build                  Build the container image"
+        echo "  task rebuild                Rebuild and restart the container"
+        echo ""
+        echo "Development"
+        echo "  task shell                  Open a shell in the container"
+        echo "  task root                   Open a shell as root user"
+        echo "  task ssh                    SSH into the container"
+        echo ""
+        echo "Information"
+        echo "  task ps                     Show container status"
+        echo "  task logs                   Show container logs"
+        echo "  task tools                  List installed tools"
+        echo "  task health                 Check container health"
+        echo ""
+        echo "Utilities"
+        echo "  task clean                  Clean up Docker resources"
+        echo "  task fresh                  Fresh install (rebuild everything)"
+        echo ""
+
+  up:
+    desc: Start the development container
+    cmds:
+      - echo "Starting container..."
+      - docker compose up -d
+      - echo "Container started successfully!"
+
+  down:
+    desc: Stop the development container
+    cmds:
+      - echo "Stopping container..."
+      - docker compose down
+      - echo "Container stopped successfully!"
+
+  restart:
+    desc: Restart the development container
+    cmds:
+      - echo "Restarting container..."
+      - docker compose restart
+      - echo "Container restarted successfully!"
+
+  build:
+    desc: Build the container image
+    cmds:
+      - echo "Building container image..."
+      - docker compose build
+      - echo "Build completed successfully!"
+
+  rebuild:
+    desc: Rebuild and restart the container
+    cmds:
+      - echo "Rebuilding container..."
+      - task: down
+      - task: build
+      - task: up
+
+  fresh:
+    desc: Fresh install - rebuild everything from scratch
+    cmds:
+      - echo "Fresh install - cleaning and rebuilding..."
+      - docker compose down -v --remove-orphans
+      - docker system prune -f
+      - docker compose build --no-cache
+      - docker compose up -d
+      - echo "Fresh install completed!"
+
+  shell:
+    desc: Open an interactive shell in the container
+    cmds:
+      - docker compose exec workspace bash
+
+  root:
+    desc: Open an interactive shell as root user
+    cmds:
+      - docker compose exec --user root workspace bash
+
+  ssh:
+    desc: SSH into the container
+    cmds:
+      - ssh -p 2222 {{.USER_NAME}}@localhost
+
+  ps:
+    desc: Show container status
+    cmds:
+      - docker compose ps
+
+  logs:
+    desc: Display container logs
+    cmds:
+      - docker compose logs -f workspace
+
+  clean:
+    desc: Clean up Docker resources
+    cmds:
+      - echo "Cleaning up Docker resources..."
+      - docker system prune -f
+      - echo "Cleanup completed!"
+
+  clean-all:
+    desc: Full cleanup including images and volumes
+    cmds:
+      - echo "Full Docker cleanup..."
+      - docker compose down -v --remove-orphans
+      - docker system prune -af
+      - docker volume prune -f
+      - echo "Full cleanup completed!"

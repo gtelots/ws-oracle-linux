@@ -1,0 +1,111 @@
+# =============================================================================
+# Docker Compose Override for Oracle Linux 9 Development Container
+# =============================================================================
+# 
+# DESCRIPTION:
+#   Override configuration for enhanced development experience
+#   Compatible with existing docker-compose.yml setup
+#
+# USAGE:
+#   This file is automatically loaded by Docker Compose
+#   Use with Taskfile for best experience: task up
+#
+# AUTHOR: Oracle Linux Development Team
+# VERSION: 1.0.0
+# =============================================================================
+
+version: '3.8'
+
+# =============================================================================
+# Enhanced Services Configuration
+# =============================================================================
+
+services:
+  # Enhanced workspace service
+  workspace:
+    # Enhanced environment variables
+    environment:
+      # Development environment
+      - NODE_ENV=${NODE_ENV:-development}
+      - PYTHON_ENV=${PYTHON_ENV:-development}
+      - DEBUG=${DEBUG:-false}
+      
+      # Logging configuration
+      - LOGGER_LEVEL=${LOGGER_LEVEL:-INFO}
+      - LOGGER_FILE=/var/log/container.log
+      - LOGGER_COLORS=true
+      
+      # Terminal configuration
+      - TERM=xterm-256color
+      - COLORTERM=truecolor
+    
+    # Additional port mappings
+    ports:
+      - "${HTTP_PORT:-8080}:8080"
+      - "${HTTPS_PORT:-8443}:8443"
+      - "${DEBUG_PORT:-9229}:9229"
+      - "${VSCODE_PORT:-8000}:8000"
+    
+    # Enhanced volume mounts
+    volumes:
+      # Workspace directory (if not using existing mount)
+      - type: bind
+        source: ${WORKSPACE_PATH:-./workspace}
+        target: /workspace
+        consistency: cached
+      
+      # SSH configuration
+      - type: volume
+        source: ssh_data
+        target: /home/${USERNAME}/.ssh
+      
+      # Development cache
+      - type: volume
+        source: dev_cache
+        target: /home/${USERNAME}/.cache
+      
+      # Log files
+      - type: volume
+        source: log_data
+        target: /var/log
+      
+      # Docker socket (for Docker-in-Docker if needed)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      
+      # Git configuration
+      - type: bind
+        source: ${HOME}/.gitconfig
+        target: /home/${USERNAME}/.gitconfig
+        read_only: true
+      
+      # Timezone
+      - /etc/localtime:/etc/localtime:ro
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "/opt/scripts/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '${CPU_LIMIT:-2.0}'
+          memory: ${MEMORY_LIMIT:-4G}
+        reservations:
+          cpus: '${CPU_RESERVATION:-0.5}'
+          memory: ${MEMORY_RESERVATION:-1G}
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # Capabilities for development
+    cap_add:
+      - SYS_PTRACE  # For debugging
+    cap_drop:
+      - ALL
+    

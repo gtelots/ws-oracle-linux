@@ -1,0 +1,37 @@
+networks:
+  ws-net:
+    driver: bridge
+
+volumes:
+  home_data:
+  docker_data:
+
+services:
+  workspace:
+    image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+    container_name: ${CONTAINER_NAME}
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE_NAME: ${BASE_IMAGE_NAME}
+        BASE_IMAGE_TAG: ${BASE_IMAGE_TAG}
+        IMAGE_TAG: ${IMAGE_TAG}
+        TZ: ${TZ}
+        USER_NAME: ${USER_NAME}
+        USER_UID: ${USER_UID}
+        USER_GID: ${USER_GID}
+        ROOT_PASSWORD: ${ROOT_PASSWORD}
+        USER_PASSWORD: ${USER_PASSWORD}
+        INSTALL_GITHUB_CLI: ${INSTALL_GITHUB_CLI}
+    restart: unless-stopped
+    working_dir: ${HOME_DIR}
+    tty: true
+    # ports:
+    #   - "${SSH_FORWARD_PORT}:${SSH_PORT}"
+    networks:
+      - ws-net
+    # volumes:
+    #   - home_data:/home/${USER_NAME}
+
+
