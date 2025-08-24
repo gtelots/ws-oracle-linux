@@ -99,7 +99,6 @@ ENV INSTALL_AWS_CLI=${INSTALL_AWS_CLI}
 ENV AWS_CLI_VERSION=${AWS_CLI_VERSION}
 
 # Copy core libraries and scripts individually for better Docker cache
-COPY resources/prebuildfs/opt/bitnami/ /opt/bitnami/
 COPY resources/prebuildfs/opt/laragis/common/ /opt/laragis/common/
 COPY resources/prebuildfs/opt/laragis/lib/ /opt/laragis/lib/
 COPY resources/prebuildfs/opt/laragis/packages/ /opt/laragis/packages/
@@ -110,11 +109,11 @@ SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 # # Install log dependencies
 # RUN log install-deps
 
-COPY resources/prebuildfs/opt/laragis/features/gum.sh /opt/laragis/features/gum.sh
-RUN /opt/laragis/features/gum.sh
+COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
+RUN /opt/laragis/tools/gum.sh
 
-COPY resources/prebuildfs/opt/laragis/features/getoptions.sh /opt/laragis/features/getoptions.sh
-RUN /opt/laragis/features/getoptions.sh
+COPY resources/prebuildfs/opt/laragis/tools/getoptions.sh /opt/laragis/tools/getoptions.sh
+RUN /opt/laragis/tools/getoptions.sh
 
 # # --------------------------------------------------------------------------
 # # User Setup

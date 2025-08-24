@@ -14,15 +14,15 @@ set -euo pipefail
 . /opt/laragis/lib/lib-log.sh
 
 # Configuration
-readonly FEATURE_NAME="gum"
-readonly FEATURE_VERSION="0.16.2"
-readonly FEATURE_FOLDER="/opt/laragis/features"
-readonly LOCK_FILE="${FEATURE_FOLDER}/${FEATURE_NAME}.installed"
-readonly INSTALL_DIR="/usr/local/bin"
+readonly TOOL_NAME="gum"
+readonly TOOL_VERSION="0.16.2"
+readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
+readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
+readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 # Check if gum is already installed
 is_installed() {
-  if command -v "${FEATURE_NAME}" >/dev/null 2>&1 || [[ -f "${LOCK_FILE}" ]]; then
+  if command -v "${TOOL_NAME}" >/dev/null 2>&1 || [[ -f "${TOOL_LOCK_FILE}" ]]; then
     return 0
   fi
   return 1
@@ -31,11 +31,11 @@ is_installed() {
 # Install gum from GitHub releases
 install_gum(){
   local architecture="$(uname -m)"
-  local download_url="https://github.com/charmbracelet/gum/releases/download/v${FEATURE_VERSION}/gum_${FEATURE_VERSION}_Linux_${architecture}.tar.gz"
+  local download_url="https://github.com/charmbracelet/gum/releases/download/v${TOOL_VERSION}/gum_${TOOL_VERSION}_Linux_${architecture}.tar.gz"
 
   # Create temporary directory
-  local temp_dir="/tmp/features/${FEATURE_NAME}-${FEATURE_VERSION}"
-  local tar_file="${temp_dir}/${FEATURE_NAME}.tar.gz"
+  local temp_dir="/tmp/tools/${TOOL_NAME}-${TOOL_VERSION}"
+  local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
   mkdir -p "$temp_dir"
 
   # Ensure cleanup on exit
@@ -46,25 +46,25 @@ install_gum(){
   # Extract gum
   tar -xzf "${tar_file}" -C "${temp_dir}" --strip-components=1
   # Install binary
-  install -m 0755 "${temp_dir}/${FEATURE_NAME}" "$INSTALL_DIR/${FEATURE_NAME}"
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "$INSTALL_DIR/${TOOL_NAME}"
 
   # Verify installation
-  command -v "${FEATURE_NAME}" >/dev/null 2>&1 || { error "${FEATURE_NAME} installation verification failed"; return 1; }
+  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
-  mkdir -p "${FEATURE_FOLDER}"
-  touch "${LOCK_FILE}"
+  mkdir -p "${TOOL_FOLDER}"
+  touch "${TOOL_LOCK_FILE}"
 }
 
 # Main function
 main() {
-  info "Installing ${FEATURE_NAME} v${FEATURE_VERSION}..."
+  info "Installing ${TOOL_NAME} v${TOOL_VERSION}..."
 
-  is_installed && { info "${FEATURE_NAME} is already installed"; return 0; }
+  is_installed && { info "${TOOL_NAME} is already installed"; return 0; }
 
   install_gum
 
-  success "${FEATURE_NAME} v${FEATURE_VERSION} installed successfully"
+  success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
 }
 
 main "$@"
