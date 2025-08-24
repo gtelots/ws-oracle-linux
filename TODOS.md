@@ -8,6 +8,28 @@
   - [ ] In log ra màn hình với các chế độ màu sắc
 
   
+- [ ] Install
+  - [ ] ansible.sh
+  - [x] aws-cli.sh
+  - [x] bash-commons.sh
+  - [ ] cloudflare.sh
+  - [ ] dbbeaver.sh
+  - [ ] docker.sh
+  - [x] dry.sh
+  - [x] getoptions.sh
+  - [x] github-cli.sh
+  - [ ] gotemplate.sh
+  - [x] gum.sh
+  - [x] lazydocker.sh
+  - [ ] lazygit.sh
+  - [ ] ngrox.sh
+  - [ ] starship.sh
+  - [ ] tailscale.sh
+  - [ ] task.sh
+  - [ ] teleport.sh
+  - [ ] terraform.sh
+  - [ ] volta.sh
+  - [ ] wp-cli.sh
 
 ## Q & A
 
