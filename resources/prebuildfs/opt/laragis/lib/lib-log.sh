@@ -99,6 +99,25 @@ error() {
     fi
     log "${msg_color}ERROR${RESET} ==> ${*}"
 }
+
+########################
+# Log a 'success' message
+# Arguments:
+#   Message to log
+# Returns:
+#   None
+#########################
+success() {
+    local msg_color=""
+    local color_bool="${BITNAMI_COLOR:-true}"
+    # comparison is performed without regard to the case of alphabetic characters
+    shopt -s nocasematch
+    if [[ "$color_bool" = 1 || "$color_bool" =~ ^(yes|true)$ ]];then
+        msg_color="$GREEN"
+    fi
+    log "${msg_color}SUCCESS${RESET} ==> ${*}"
+}
+
 ########################
 # Log a 'debug' message
 # Globals:

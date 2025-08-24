@@ -17,6 +17,7 @@ LABEL \
 # -----------------------------
 ENV DEBIAN_FRONTEND=noninteractive \
     TERM=xterm-256color
+
 USER root
 
 ARG TZ=UTC
@@ -97,42 +98,54 @@ ENV DATA_DIR=${DATA_DIR}
 ENV INSTALL_AWS_CLI=${INSTALL_AWS_CLI}
 ENV AWS_CLI_VERSION=${AWS_CLI_VERSION}
 
-COPY --exclude=**/setup --exclude=**/tools resources/prebuildfs/ /
+# Copy core libraries and scripts individually for better Docker cache
+COPY resources/prebuildfs/opt/bitnami/ /opt/bitnami/
+COPY resources/prebuildfs/opt/laragis/common/ /opt/laragis/common/
+COPY resources/prebuildfs/opt/laragis/lib/ /opt/laragis/lib/
+COPY resources/prebuildfs/opt/laragis/packages/ /opt/laragis/packages/
+COPY resources/prebuildfs/usr/ /usr/
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
-RUN log install-deps && log --version
+# # Install log dependencies
+# RUN log install-deps
 
-# --------------------------------------------------------------------------
-# User Setup
-# --------------------------------------------------------------------------
+COPY resources/prebuildfs/opt/laragis/features/gum.sh /opt/laragis/features/gum.sh
+RUN /opt/laragis/features/gum.sh
 
-# Setup non-root user + sudo (wheel)
-COPY resources/prebuildfs/opt/laragis/common/setup/setup-user.sh /opt/laragis/common/setup/setup-user.sh
-RUN ./opt/laragis/common/setup/setup-user.sh ${ROOT_PASSWORD} ${USER_PASSWORD}
+COPY resources/prebuildfs/opt/laragis/features/getoptions.sh /opt/laragis/features/getoptions.sh
+RUN /opt/laragis/features/getoptions.sh
 
-ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
+# # --------------------------------------------------------------------------
+# # User Setup
+# # --------------------------------------------------------------------------
 
-# -----------------------------
-# Core System Packages Installation
-COPY resources/prebuildfs/opt/laragis/common/tools/01-core-pkgs.sh /opt/laragis/common/tools/01-core-pkgs.sh
-RUN /opt/laragis/common/tools/01-core-pkgs.sh
+# # Setup non-root user + sudo (wheel)
+# COPY resources/prebuildfs/opt/laragis/setup/setup-user.sh /opt/laragis/setup/setup-user.sh
+# RUN ./opt/laragis/setup/setup-user.sh ${ROOT_PASSWORD} ${USER_PASSWORD}
 
-# Essential System Utilities Installation
-COPY resources/prebuildfs/opt/laragis/common/tools/02-essential-pkgs.sh /opt/laragis/common/tools/02-essential-pkgs.sh
-RUN /opt/laragis/common/tools/02-essential-pkgs.sh
+# ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
 
-# Development Tools & Libraries Installation
-COPY resources/prebuildfs/opt/laragis/common/tools/03-dev-pkgs.sh /opt/laragis/common/tools/03-dev-pkgs.sh
-RUN /opt/laragis/common/tools/03-dev-pkgs.sh
+# # -----------------------------
+# # Core System Packages Installation
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-core.sh /opt/laragis/packages/pkg-core.sh
+# RUN /opt/laragis/packages/pkg-core.sh
+
+# # Essential System Utilities Installation
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-essential.sh /opt/laragis/packages/pkg-essential.sh
+# RUN /opt/laragis/packages/pkg-essential.sh
+
+# # Development Tools & Libraries Installation
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-dev.sh /opt/laragis/packages/pkg-dev.sh
+# RUN /opt/laragis/packages/pkg-dev.sh
 
 # # Enhanced Development Tools Installation Script
-# COPY resources/prebuildfs/opt/laragis/common/tools/04-modern-pkgs.sh /opt/laragis/common/tools/04-modern-pkgs.sh
-# # RUN /opt/laragis/common/tools/04-modern-pkgs.sh
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-modern.sh /opt/laragis/packages/pkg-modern.sh
+# # RUN /opt/laragis/packages/pkg-modern.sh
 
 # AWS CLI Installation
-COPY resources/prebuildfs/opt/laragis/common/tools/aws-cli.sh /opt/laragis/common/tools/aws-cli.sh
-RUN /opt/laragis/common/tools/aws-cli.sh
+# COPY resources/prebuildfs/opt/laragis/features/aws-cli.sh /opt/laragis/features/aws-cli.sh
+# RUN /opt/laragis/features/aws-cli.sh
 
 # -----------------------------
 # Language Runtimes (Conditional Installation)
