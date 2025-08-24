@@ -1,4 +1,3 @@
-# https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.28.16.zip
 # =============================================================================
 # AWS Cli
 # =============================================================================
@@ -21,7 +20,7 @@ readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
 is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
-install_aws(){
+install_tool(){
   local arch="$(uname -m)"
   local download_url="https://awscli.amazonaws.com/awscli-exe-linux-${arch}-${TOOL_VERSION}.zip"
 
@@ -50,7 +49,7 @@ main() {
 
   is_installed && { log_info "${TOOL_NAME} is already installed"; return 0; }
 
-  install_aws
+  install_tool
 
   log_success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
 }

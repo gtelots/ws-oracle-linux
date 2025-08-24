@@ -19,11 +19,9 @@ readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-# Check if gum is already installed
 is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
-# Install gum from GitHub releases
-install_gum(){
+install_tool(){
   local arch="$(uname -m)"
   local download_url="https://github.com/charmbracelet/gum/releases/download/v${TOOL_VERSION}/gum_${TOOL_VERSION}_Linux_${arch}.tar.gz"
   
@@ -52,7 +50,7 @@ main() {
 
   is_installed && { log_info "${TOOL_NAME} is already installed"; return 0; }
 
-  install_gum
+  install_tool
 
   log_success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
 }

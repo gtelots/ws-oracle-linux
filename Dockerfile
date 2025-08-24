@@ -76,7 +76,6 @@ ARG TAILSCALE_VERSION=1.86.4
 ARG TERRAFORM_VERSION=1.12.2
 ARG CLOUDFLARE_VERSION=2025.8.0
 ARG TELEPORT_VERSION=18.1.5
-ARG DRY_VERSION=0.11.2
 ARG WP_CLI_VERSION=2.12.0
 ARG DOCKER_VERSION=28.3.2
 # ARG SUPERVISOR_VERSION=
@@ -103,7 +102,7 @@ COPY resources/prebuildfs/usr/ /usr/
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
 RUN set -euo pipefail; \
-    pkg-install curl wget unzip
+    pkg-install curl wget unzip ncurses file git
 
 # # Install log dependencies
 # RUN log install-deps
@@ -134,6 +133,35 @@ ARG AWS_CLI_VERSION=2.28.16
 
 COPY resources/prebuildfs/opt/laragis/tools/aws-cli.sh /opt/laragis/tools/aws-cli.sh
 RUN AWS_CLI_VERSION="${AWS_CLI_VERSION}" /opt/laragis/tools/aws-cli.sh
+
+# --------------------------------------------------------------------------
+# dry - A Docker manager for the terminal
+# Repo: https://github.com/moncho/dry
+# --------------------------------------------------------------------------
+ARG DRY_VERSION=0.11.2
+
+COPY resources/prebuildfs/opt/laragis/tools/dry.sh /opt/laragis/tools/dry.sh
+RUN DRY_VERSION="${DRY_VERSION}" /opt/laragis/tools/dry.sh
+
+# --------------------------------------------------------------------------
+# lazydocker - The lazier way to manage everything docker
+# Repo: https://github.com/jesseduffield/lazydocker
+# --------------------------------------------------------------------------
+ARG LAZYDOCKER_VERSION=0.24.1
+
+COPY resources/prebuildfs/opt/laragis/tools/lazydocker.sh /opt/laragis/tools/lazydocker.sh
+RUN LAZYDOCKER_VERSION="${LAZYDOCKER_VERSION}" /opt/laragis/tools/lazydocker.sh
+
+# --------------------------------------------------------------------------
+# Github Cli - GitHub’s official command line tool
+# Repo: https://github.com/cli/cli
+# --------------------------------------------------------------------------
+ARG GITHUB_CLI_VERSION=2.78.0
+ARG GH_TOKEN
+ENV GH_TOKEN=${GH_TOKEN}
+
+COPY resources/prebuildfs/opt/laragis/tools/github-cli.sh /opt/laragis/tools/github-cli.sh
+RUN GITHUB_CLI_VERSION="${GITHUB_CLI_VERSION}" /opt/laragis/tools/github-cli.sh
 
 # # --------------------------------------------------------------------------
 # # User Setup

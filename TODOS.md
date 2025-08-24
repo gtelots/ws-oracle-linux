@@ -22,6 +22,7 @@
 - https://github.com/Zordrak/bashlog
 - https://github.com/gruntwork-io/bash-commons/tree/master/modules/bash-commons/src
 - https://github.com/HariSekhon/DevOps-Bash-tools
+- https://github.com/veggiemonk/awesome-docker
 
 ## AI
 - aws cli script dùng bin log thay vì tự viết hàm, tránh duplicate

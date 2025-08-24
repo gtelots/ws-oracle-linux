@@ -36,7 +36,9 @@ trim_trailing_whitespace = false
 # =============================================================================
 # Shell & Scripts - use defaults (2 spaces)
 # =============================================================================
-# [*.{sh,bash,zsh,fish}] - uses defaults
+[*.{sh,bash,zsh,fish}]
+indent_style = space
+indent_size = 2
 
 # =============================================================================
 # Infrastructure & DevOps - use defaults (2 spaces)
