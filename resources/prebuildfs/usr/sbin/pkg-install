@@ -1,35 +1,129 @@
-#!/bin/sh
-# Copyright Broadcom, Inc. All Rights Reserved.
+#!/bin/bash
+# Enhanced Package Installer for Oracle Linux
+# Copyright LaraGIS. All Rights Reserved.
 # SPDX-License-Identifier: APACHE-2.0
-set -eu
 
-n=0
-max=2
+set -euo pipefail
 
-until [ "$n" -gt "$max" ]; do
-  set +e
-  (
-    dnf -y makecache --refresh
+# Configuration
+RETRY_MAX=3
+RETRY_DELAY=2
+LOCK_DIR="/opt/laragis/data/locks"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Logging function
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $*"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $*"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $*"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $*"
+}
+
+# Create lock directory
+mkdir -p "$LOCK_DIR"
+
+# Check if packages are already installed
+check_installed() {
+    local package="$1"
+    local lock_file="$LOCK_DIR/${package}.lock"
     
-    dnf -y \
-      --setopt=install_weak_deps=False \
-      --setopt=tsflags=nodocs \
-      install "$@"
-  )
-  CODE=$?
-  set -e
+    # Check lock file first (faster)
+    if [[ -f "$lock_file" ]]; then
+        return 0
+    fi
+    
+    # Check if actually installed
+    if rpm -q "$package" &>/dev/null; then
+        # Create lock file for future checks
+        touch "$lock_file"
+        return 0
+    fi
+    
+    return 1
+}
 
-  if [ "$CODE" -eq 0 ]; then
-    break
-  fi
+# Install packages with retry logic
+install_packages() {
+    local packages=("$@")
+    local to_install=()
+    local already_installed=()
+    
+    # Filter out already installed packages
+    for package in "${packages[@]}"; do
+        if check_installed "$package"; then
+            already_installed+=("$package")
+        else
+            to_install+=("$package")
+        fi
+    done
+    
+    # Report status
+    if [[ ${#already_installed[@]} -gt 0 ]]; then
+        log_info "Already installed (${#already_installed[@]}): ${already_installed[*]}"
+    fi
+    
+    if [[ ${#to_install[@]} -eq 0 ]]; then
+        log_success "All packages already installed"
+        return 0
+    fi
+    
+    log_info "Installing ${#to_install[@]} packages: ${to_install[*]}"
+    
+    # Install with retry logic
+    local n=0
+    while [[ "$n" -le "$RETRY_MAX" ]]; do
+        set +e
+        dnf -y \
+            --setopt=install_weak_deps=False \
+            --setopt=tsflags=nodocs \
+            --setopt=deltarpm=False \
+            --setopt=timeout=60 \
+            install "${to_install[@]}"
+        local exit_code=$?
+        set -e
+        
+        if [[ "$exit_code" -eq 0 ]]; then
+            # Create lock files for successful installations
+            for package in "${to_install[@]}"; do
+                touch "$LOCK_DIR/${package}.lock"
+            done
+            log_success "Successfully installed ${#to_install[@]} packages"
+            break
+        fi
+        
+        if [[ "$n" -eq "$RETRY_MAX" ]]; then
+            log_error "Failed to install packages after $RETRY_MAX attempts"
+            exit "$exit_code"
+        fi
+        
+        n=$((n + 1))
+        log_warn "Installation failed (attempt $n/$RETRY_MAX), retrying in ${RETRY_DELAY}s..."
+        sleep "$RETRY_DELAY"
+    done
+}
 
-  if [ "$n" -eq "$max" ]; then
-    exit "$CODE"
-  fi
+# Main execution
+if [[ $# -eq 0 ]]; then
+    log_error "No packages specified"
+    exit 1
+fi
 
-  echo "dnf failed, retrying"
-  n=$((n + 1))
-done
+# Install packages
+install_packages "$@"
 
-dnf -y clean all
-rm -rf /var/cache/dnf /var/cache/yum
+log_success "Package installation completed successfully"
