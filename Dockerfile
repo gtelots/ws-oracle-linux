@@ -55,7 +55,7 @@ ARG INSTALL_DOCKER=true
 ARG INSTALL_SUPERVISOR=true
 ARG INSTALL_DBEAVER=true
 
-ARG GUM_VERSION=0.16.2
+
 ARG STARSHIP_VERSION=1.17.1
 ARG ZELLIJ_VERSION=0.43.1
 ARG GOMPLATE_VERSION=v4.3.3
@@ -94,26 +94,46 @@ ENV WORKSPACE_DIR=${WORKSPACE_DIR}
 ENV HOME_DIR=/home/${USER_NAME}
 ENV DATA_DIR=${DATA_DIR}
 
-# AWS CLI Configuration
-ENV INSTALL_AWS_CLI=${INSTALL_AWS_CLI}
-ENV AWS_CLI_VERSION=${AWS_CLI_VERSION}
-
 # Copy core libraries and scripts individually for better Docker cache
+COPY resources/prebuildfs/opt/laragis/bin/ /opt/laragis/bin/
 COPY resources/prebuildfs/opt/laragis/common/ /opt/laragis/common/
 COPY resources/prebuildfs/opt/laragis/lib/ /opt/laragis/lib/
-COPY resources/prebuildfs/opt/laragis/packages/ /opt/laragis/packages/
 COPY resources/prebuildfs/usr/ /usr/
 
 SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
+RUN set -euo pipefail; \
+    pkg-install curl wget unzip
+
 # # Install log dependencies
 # RUN log install-deps
 
+# --------------------------------------------------------------------------
+# Gum - A tool for glamorous shell scripts
+# Repo: https://github.com/charmbracelet/gum
+# --------------------------------------------------------------------------
+ARG GUM_VERSION=0.16.2
+
 COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
-RUN /opt/laragis/tools/gum.sh
+RUN GUM_VERSION="${GUM_VERSION}" /opt/laragis/tools/gum.sh
+
+# --------------------------------------------------------------------------
+# getoptions - An elegant option/argument parser for shell scripts
+# Repo: https://github.com/ko1nksm/getoptions
+# --------------------------------------------------------------------------
+ARG GETOPTIONS_VERSION=3.3.2
 
 COPY resources/prebuildfs/opt/laragis/tools/getoptions.sh /opt/laragis/tools/getoptions.sh
-RUN /opt/laragis/tools/getoptions.sh
+RUN GETOPTIONS_VERSION="${GETOPTIONS_VERSION}" /opt/laragis/tools/getoptions.sh
+
+# --------------------------------------------------------------------------
+# awscli - Universal Command Line Interface for Amazon Web Services
+# Repo: https://github.com/aws/aws-cli
+# --------------------------------------------------------------------------
+ARG AWS_CLI_VERSION=2.28.16
+
+COPY resources/prebuildfs/opt/laragis/tools/aws-cli.sh /opt/laragis/tools/aws-cli.sh
+RUN AWS_CLI_VERSION="${AWS_CLI_VERSION}" /opt/laragis/tools/aws-cli.sh
 
 # # --------------------------------------------------------------------------
 # # User Setup

@@ -18,6 +18,11 @@
 - Xem bitnami
     - airflow
 
+## Repos
+- https://github.com/Zordrak/bashlog
+- https://github.com/gruntwork-io/bash-commons/tree/master/modules/bash-commons/src
+- https://github.com/HariSekhon/DevOps-Bash-tools
+
 ## AI
 - aws cli script dùng bin log thay vì tự viết hàm, tránh duplicate
 - Không cần fallback vì file này chắc chắn có source "/opt/laragis/scripts/liblog.sh"

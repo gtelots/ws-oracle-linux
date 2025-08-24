@@ -8,48 +8,36 @@
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # =============================================================================
 
-set -euo pipefail
-
 # Load libraries
-. /opt/laragis/lib/lib-log.sh
+. /opt/laragis/lib/bootstrap.sh
+. /opt/laragis/lib/log.sh
 
 # Configuration
 readonly TOOL_NAME="getoptions"
-readonly TOOL_VERSION="3.3.2"
+readonly TOOL_VERSION="${GETOPTIONS_VERSION:-3.3.2}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-# Check if getoptions is already installed
-is_installed() {
-  if command -v "${TOOL_NAME}" >/dev/null 2>&1 || [[ -f "${TOOL_LOCK_FILE}" ]]; then
-    return 0
-  fi
-  return 1
-}
+is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
-# Install getoptions from GitHub source
 install_getoptions(){
   local download_url="https://github.com/ko1nksm/getoptions/releases/download/v${TOOL_VERSION}/getoptions.tar.gz"
 
   # Create temporary directory
-  local temp_dir="/tmp/tools/${TOOL_NAME}-${TOOL_VERSION}"
+  local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
-  mkdir -p "$temp_dir"
+  
+  # Setup temporary directory and cleanup trap
+  mkdir -p "$temp_dir" && trap "rm -rf '${temp_dir}'" EXIT
 
-  # Ensure cleanup on exit
-  trap "rm -rf '${temp_dir}'" EXIT
-
-  # Download getoptions source
-  curl -fsSL -o "${tar_file}" "${download_url}"
-  # Extract getoptions
-  tar -xzf "${tar_file}" -C "${temp_dir}"
-
-  # Install binary
+  # Download && extract -> install binary
+  curl -fsSL -o "${tar_file}" "${download_url}" && \
+  tar -xzf "${tar_file}" -C "${temp_dir}" && \
   install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
-  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
+  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { log_error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file with correct extension
   mkdir -p "/opt/laragis/features"
@@ -58,13 +46,13 @@ install_getoptions(){
 
 # Main function
 main() {
-  info "Installing ${TOOL_NAME} v${TOOL_VERSION}..."
+  log_info "Installing ${TOOL_NAME} v${TOOL_VERSION}..."
 
-  is_installed && { info "${TOOL_NAME} is already installed"; return 0; }
+  is_installed && { log_info "${TOOL_NAME} is already installed"; return 0; }
 
   install_getoptions
 
-  success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
+  log_success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
 }
 
 main "$@"

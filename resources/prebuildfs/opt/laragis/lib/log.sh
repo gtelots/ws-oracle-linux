@@ -49,13 +49,13 @@ log() {
     fi
 }
 ########################
-# Log an 'info' message
+# Log an 'log_info' message
 # Arguments:
 #   Message to log
 # Returns:
 #   None
 #########################
-info() {
+log_info() {
     local msg_color=""
     local color_bool="${BITNAMI_COLOR:-true}"
     # comparison is performed without regard to the case of alphabetic characters
@@ -72,7 +72,7 @@ info() {
 # Returns:
 #   None
 #########################
-warn() {
+log_warn() {
     local msg_color=""
     local color_bool="${BITNAMI_COLOR:-true}"
     # comparison is performed without regard to the case of alphabetic characters
@@ -89,7 +89,7 @@ warn() {
 # Returns:
 #   None
 #########################
-error() {
+log_error() {
     local msg_color=""
     local color_bool="${BITNAMI_COLOR:-true}"
     # comparison is performed without regard to the case of alphabetic characters
@@ -107,7 +107,7 @@ error() {
 # Returns:
 #   None
 #########################
-success() {
+log_success() {
     local msg_color=""
     local color_bool="${BITNAMI_COLOR:-true}"
     # comparison is performed without regard to the case of alphabetic characters
@@ -127,7 +127,7 @@ success() {
 # Returns:
 #   None
 #########################
-debug() {
+log_debug() {
     local msg_color=""
     local color_bool="${BITNAMI_COLOR:-true}"
     # comparison is performed without regard to the case of alphabetic characters
@@ -150,7 +150,7 @@ debug() {
 # Returns:
 #   None
 #########################
-indent() {
+log_indent() {
     local string="${1:-}"
     local num="${2:?missing num}"
     local char="${3:-" "}"
