@@ -1,22 +1,22 @@
+#!/usr/bin/env bash
 # =============================================================================
-# github-cli
+# task
 # =============================================================================
-# DESCRIPTION: GitHub’s official command line tool
-# URL: https://github.com/cli/cli
-# VERSION: v2.78.0
+# DESCRIPTION: A task runner / simpler Make alternative written in Go
+# URL: https://github.com/charmbracelet/gum
+# VERSION: v3.44.1
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
-# REQUIRED TOOLS: git
 # =============================================================================
 
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
-. /opt/laragis/lib/os.sh
 . /opt/laragis/lib/arch.sh
+. /opt/laragis/lib/os.sh
 
 # Configuration
-readonly TOOL_NAME="gh"
-readonly TOOL_VERSION="${GITHUB_CLI_VERSION:-2.78.0}"
+readonly TOOL_NAME="task"
+readonly TOOL_VERSION="${TASK_VERSION:-3.44.1}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
@@ -25,9 +25,8 @@ is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE"
 
 install_tool(){
   local os="$(detect_os)"
-  local arch="$(arch_auto deb)"
-  
-  local download_url="https://github.com/cli/cli/releases/download/v${TOOL_VERSION}/gh_${TOOL_VERSION}_${os}_${arch}.tar.gz"
+  local arch="$(arch_auto)"
+  local download_url="https://github.com/go-task/task/releases/download/v${TOOL_VERSION}/task_${os}_${arch}.tar.gz"
   
   local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
@@ -37,13 +36,8 @@ install_tool(){
   
   # Download -> extract -> install binary
   curl -fsSL -o "${tar_file}" "${download_url}" && \
-  tar -xzf "${tar_file}" -C "${temp_dir}" --strip-components=1 && \
-  install -m 0755 "${temp_dir}/bin/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
-
-  # Install extensions
-  if [ -n "${GH_TOKEN:-}" ]; then
-    gh extension install github/gh-copilot
-  fi
+  tar -xzf "${tar_file}" -C "${temp_dir}" && \
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
   os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }

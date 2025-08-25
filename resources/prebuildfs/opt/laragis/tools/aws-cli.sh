@@ -10,6 +10,7 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/os.sh
 
 # Configuration
 readonly TOOL_NAME="aws"
@@ -18,7 +19,7 @@ readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
   local arch="$(uname -m)"
@@ -36,7 +37,7 @@ install_tool(){
   ${temp_dir}/aws/install --bin-dir "${INSTALL_DIR}" --update
 
   # Verify installation
-  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
+  os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
   mkdir -p "${TOOL_FOLDER}"

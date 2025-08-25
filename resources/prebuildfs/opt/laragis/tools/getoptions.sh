@@ -11,6 +11,7 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/os.sh
 
 # Configuration
 readonly TOOL_NAME="getoptions"
@@ -19,7 +20,7 @@ readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
   local download_url="https://github.com/ko1nksm/getoptions/releases/download/v${TOOL_VERSION}/getoptions.tar.gz"
@@ -37,7 +38,7 @@ install_tool(){
   install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
-  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { log_error "${TOOL_NAME} installation verification failed"; return 1; }
+  os_command_is_installed "$TOOL_NAME" || { log_error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file with correct extension
   mkdir -p "/opt/laragis/features"

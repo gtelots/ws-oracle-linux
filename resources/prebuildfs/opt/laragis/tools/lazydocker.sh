@@ -10,6 +10,8 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/os.sh
+. /opt/laragis/lib/arch.sh
 
 # Configuration
 readonly TOOL_NAME="lazydocker"
@@ -18,11 +20,12 @@ readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed "$TOOL_NAME" 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
-  local arch="$(uname -m)"
-  local download_url="https://github.com/jesseduffield/lazydocker/releases/download/v${TOOL_VERSION}/lazydocker_${TOOL_VERSION}_Linux_${arch}.tar.gz"
+  local os="$(detect_os)"
+  local arch="$(arch_auto)"
+  local download_url="https://github.com/jesseduffield/lazydocker/releases/download/v${TOOL_VERSION}/lazydocker_${TOOL_VERSION}_${os^}_${arch}.tar.gz"
   
   local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
@@ -33,14 +36,13 @@ install_tool(){
   # Download -> extract -> install binary
   curl -fsSL -o "${tar_file}" "${download_url}" && \
   tar -xzf "${tar_file}" -C "${temp_dir}" && \
-  install -m 0755 "${temp_dir}/${TOOL_NAME}" "$INSTALL_DIR/${TOOL_NAME}"
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
   command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
-  mkdir -p "${TOOL_FOLDER}"
-  touch "${TOOL_LOCK_FILE}"
+  mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"
 }
 
 # Main function

@@ -12,6 +12,8 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/os.sh
+. /opt/laragis/lib/arch.sh
 
 # Configuration
 readonly TOOL_NAME="dry"
@@ -20,10 +22,12 @@ readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed "$TOOL_NAME" 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
-  local download_url="https://github.com/moncho/dry/releases/download/v${TOOL_VERSION}/dry-linux-amd64"
+  local os="$(detect_os)"
+  local arch="$(arch_auto deb)"
+  local download_url="https://github.com/moncho/dry/releases/download/v${TOOL_VERSION}/dry-${os}-${arch}"
   
   local temp_dir="$(mktemp -d)"
   local bin_file="${temp_dir}/${TOOL_NAME}"
@@ -33,14 +37,13 @@ install_tool(){
   
   # Download -> extract -> install binary
   curl -fsSL -o "${bin_file}" "${download_url}" && \
-  install -m 0755 "${temp_dir}/${TOOL_NAME}" "$INSTALL_DIR/${TOOL_NAME}"
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
   command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
-  mkdir -p "${TOOL_FOLDER}"
-  touch "${TOOL_LOCK_FILE}"
+  mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"
 }
 
 # Main function

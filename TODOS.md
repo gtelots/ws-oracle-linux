@@ -12,7 +12,7 @@
   - [ ] ansible.sh
   - [x] aws-cli.sh
   - [x] bash-commons.sh
-  - [ ] cloudflare.sh
+  - [x] cloudflared.sh
   - [ ] dbbeaver.sh
   - [ ] docker.sh
   - [x] dry.sh
@@ -21,13 +21,13 @@
   - [ ] gotemplate.sh
   - [x] gum.sh
   - [x] lazydocker.sh
-  - [ ] lazygit.sh
-  - [ ] ngrox.sh
-  - [ ] starship.sh
-  - [ ] tailscale.sh
-  - [ ] task.sh
+  - [x] lazygit.sh
+  - [x] ngrok.sh
+  - [x] starship.sh
+  - [x] tailscale.sh
+  - [x] task.sh
   - [ ] teleport.sh
-  - [ ] terraform.sh
+  - [x] terraform.sh
   - [ ] volta.sh
   - [ ] wp-cli.sh
 

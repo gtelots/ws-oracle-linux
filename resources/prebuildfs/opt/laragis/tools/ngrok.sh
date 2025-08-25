@@ -1,11 +1,10 @@
 # =============================================================================
-# github-cli
+# ngrok
 # =============================================================================
-# DESCRIPTION: GitHub’s official command line tool
-# URL: https://github.com/cli/cli
-# VERSION: v2.78.0
+# DESCRIPTION: front door—and the fastest way to put anything on the internet
+# URL: https://ngrok.com
+# VERSION: v3.26.0
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
-# REQUIRED TOOLS: git
 # =============================================================================
 
 # Load libraries
@@ -15,19 +14,18 @@
 . /opt/laragis/lib/arch.sh
 
 # Configuration
-readonly TOOL_NAME="gh"
-readonly TOOL_VERSION="${GITHUB_CLI_VERSION:-2.78.0}"
+readonly TOOL_NAME="ngrok"
+readonly TOOL_VERSION="${NGROK_VERSION:-3.26.0}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed "$TOOL_NAME" 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
   local os="$(detect_os)"
   local arch="$(arch_auto deb)"
-  
-  local download_url="https://github.com/cli/cli/releases/download/v${TOOL_VERSION}/gh_${TOOL_VERSION}_${os}_${arch}.tar.gz"
+  local download_url="https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-${TOOL_VERSION}-${os}-${arch}.tgz"
   
   local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
@@ -36,17 +34,17 @@ install_tool(){
   mkdir -p "$temp_dir" && trap "rm -rf '${temp_dir}'" EXIT
   
   # Download -> extract -> install binary
-  curl -fsSL -o "${tar_file}" "${download_url}" && \
-  tar -xzf "${tar_file}" -C "${temp_dir}" --strip-components=1 && \
-  install -m 0755 "${temp_dir}/bin/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
+  curl -fsSL -o "${tar_file}" "${download_url}"
+  tar -xzf "${tar_file}" -C "${temp_dir}"
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
-  # Install extensions
-  if [ -n "${GH_TOKEN:-}" ]; then
-    gh extension install github/gh-copilot
+  # Add your authtoken
+  if [ -n "${NGROK_AUTHTOKEN}" ]; then
+    ngrok config add-authtoken "${NGROK_AUTHTOKEN}"
   fi
 
   # Verify installation
-  os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }
+  command -v "${TOOL_NAME}" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
   mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"
