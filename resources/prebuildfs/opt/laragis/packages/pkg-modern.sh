@@ -65,27 +65,27 @@ readonly TERMINAL_PRODUCTIVITY_TOOLS=(
 )
 
 create_symlinks() {
-  info "Creating symlinks for tool compatibility..."
+  log_info "Creating symlinks for tool compatibility..."
   
   # Create batcat symlink if bat exists but batcat doesn't
   if command -v bat >/dev/null && ! command -v batcat >/dev/null; then
-    info "✓ Creating batcat symlink..."
+    log_info "✓ Creating batcat symlink..."
     ln -sf "$(command -v bat)" /usr/local/bin/batcat
   fi
   
   # Create fd symlink if fdfind exists but fd doesn't
   if command -v fdfind >/dev/null && ! command -v fd >/dev/null; then
-    info "✓ Creating fd symlink..."
+    log_info "✓ Creating fd symlink..."
     ln -sf "$(command -v fdfind)" /usr/local/bin/fd
   fi
   
   # Create speedtest symlink if speedtest-cli exists
   if command -v speedtest-cli >/dev/null && ! command -v speedtest >/dev/null; then
-    info "✓ Creating speedtest symlink..."
+    log_info "✓ Creating speedtest symlink..."
     ln -sf "$(command -v speedtest-cli)" /usr/local/bin/speedtest
   fi
   
-  info "Symlinks configuration completed!"
+  log_info "Symlinks configuration completed!"
 }
 
 install_package_group() {
@@ -93,13 +93,13 @@ install_package_group() {
   shift
   local packages=("$@")
   
-  info "Installing $group_name..."
+  log_info "Installing $group_name..."
   
   # Check which packages are already installed (faster batch check)
   local to_install=()
   local already_installed=()
   
-  info "Checking package status..."
+  log_info "Checking package status..."
   for package in "${packages[@]}"; do
     if rpm -q "$package" >/dev/null 2>&1; then
       already_installed+=("$package")
@@ -110,18 +110,18 @@ install_package_group() {
   
   # Report already installed packages
   if [[ ${#already_installed[@]} -gt 0 ]]; then
-    info "✓ Already installed: ${already_installed[*]}"
+    log_info "✓ Already installed: ${already_installed[*]}"
   fi
   
   # Install missing packages in batch (much faster)
   if [[ ${#to_install[@]} -gt 0 ]]; then
-    info "Installing missing packages: ${to_install[*]}"
+    log_info "Installing missing packages: ${to_install[*]}"
     
     # Use pkg-install for better retry logic and optimization
     if pkg-install "${to_install[@]}"; then
-      info "✓ All packages installed successfully"
+      log_info "✓ All packages installed successfully"
     else
-      warn "⚠ Some packages may have failed, checking individual status..."
+      log_warn "⚠ Some packages may have failed, checking individual status..."
       
       # Fallback: check which ones actually failed
       local failed_packages=()
@@ -132,28 +132,28 @@ install_package_group() {
       done
       
       if [[ ${#failed_packages[@]} -gt 0 ]]; then
-        warn "Failed packages: ${failed_packages[*]}"
-        info "Note: These tools may be available via external installation methods"
+        log_warn "Failed packages: ${failed_packages[*]}"
+        log_info "Note: These tools may be available via external installation methods"
         # Try individual installation for failed packages
         for package in "${failed_packages[@]}"; do
-          info "Retrying individual install: $package"
+          log_info "Retrying individual install: $package"
           if pkg-install "$package"; then
-            info "✓ $package installed on retry"
+            log_info "✓ $package installed on retry"
           else
-            warn "✗ $package installation failed completely"
+            log_warn "✗ $package installation failed completely"
           fi
         done
       fi
     fi
   else
-    info "✓ All packages already installed"
+    log_info "✓ All packages already installed"
   fi
   
-  info "$group_name installation completed!"
+  log_info "$group_name installation completed!"
 }
 
 install_external_tools() {
-  info "Installing tools that require external sources..."
+  log_info "Installing tools that require external sources..."
   
   # List of tools that typically need external installation
   local external_tools=(
@@ -173,16 +173,16 @@ install_external_tools() {
     "ctop"
   )
   
-  warn "The following tools may need external installation:"
+  log_warn "The following tools may need external installation:"
   for tool in "${external_tools[@]}"; do
-    warn "  - $tool (check /opt/laragis/scripts/tools/ for installation scripts)"
+    log_warn "  - $tool (check /opt/laragis/scripts/tools/ for installation scripts)"
   done
   
-  info "External tools installation will be handled by individual tool scripts"
+  log_info "External tools installation will be handled by individual tool scripts"
 }
 
 main() {
-  info "Starting enhanced development tools installation..."
+  log_info "Starting enhanced development tools installation..."
   
   # Combine all packages for single transaction (fastest approach)
   local all_packages=(
@@ -193,7 +193,7 @@ main() {
     "${TERMINAL_PRODUCTIVITY_TOOLS[@]}"
   )
   
-  info "Checking status of ${#all_packages[@]} packages..."
+  log_info "Checking status of ${#all_packages[@]} packages..."
   local to_install=()
   local already_installed=()
   
@@ -208,19 +208,19 @@ main() {
   
   # Report status
   if [[ ${#already_installed[@]} -gt 0 ]]; then
-    info "✓ Already installed (${#already_installed[@]}): ${already_installed[*]}"
+    log_info "✓ Already installed (${#already_installed[@]}): ${already_installed[*]}"
   fi
   
   # Install all missing packages in single transaction
   if [[ ${#to_install[@]} -gt 0 ]]; then
-    info "Installing ${#to_install[@]} missing packages in single transaction..."
-    info "Packages: ${to_install[*]}"
+    log_info "Installing ${#to_install[@]} missing packages in single transaction..."
+    log_info "Packages: ${to_install[*]}"
     
     if pkg-install "${to_install[@]}"; then
-      info "✓ All ${#to_install[@]} packages installed successfully"
+      log_info "✓ All ${#to_install[@]} packages installed successfully"
     else
-      warn "⚠ Batch installation failed, falling back to group installation..."
-      info "Note: Many modern tools may not be available in standard repos"
+      log_warn "⚠ Batch installation failed, falling back to group installation..."
+      log_info "Note: Many modern tools may not be available in standard repos"
       
       # Fallback to group installation for better error handling
       install_package_group "Core Enhanced Tools" "${CORE_ENHANCED_TOOLS[@]}"
@@ -230,7 +230,7 @@ main() {
       install_package_group "Terminal & Productivity Tools" "${TERMINAL_PRODUCTIVITY_TOOLS[@]}"
     fi
   else
-    info "✓ All packages already installed, skipping installation"
+    log_info "✓ All packages already installed, skipping installation"
   fi
   
   # Handle external tools
@@ -239,8 +239,8 @@ main() {
   # Create symlinks for compatibility
   create_symlinks
   
-  info "Enhanced development tools setup completed successfully!"
-  info "Check logs above for any tools that need external installation"
+  log_info "Enhanced development tools setup completed successfully!"
+  log_info "Check logs above for any tools that need external installation"
 }
 
 main "$@"

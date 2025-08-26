@@ -14,24 +14,24 @@
 
 # Repository and system update
 setup_repositories() {
-  info "Setting up repositories and updating system..."
+  log_info "Setting up repositories and updating system..."
   
   # Check if EPEL is already configured
   if dnf repolist enabled | grep -q epel; then
-    info "✓ EPEL repository already enabled"
+    log_info "✓ EPEL repository already enabled"
   else
     # Enable EPEL repository
-    info "Configuring EPEL repository..."
+    log_info "Configuring EPEL repository..."
     if ! pkg-install oracle-epel-release-el9; then
-      info "Fallback: Enabling EPEL via config-manager..."
-      dnf -y config-manager --enable ol9_developer_EPEL || warn "EPEL setup failed"
+      log_info "Fallback: Enabling EPEL via config-manager..."
+      dnf -y config-manager --enable ol9_developer_EPEL || log_warn "EPEL setup failed"
     fi
   fi
   
   # Update system with security patches (combined with cache refresh)
-  info "Updating system packages and refreshing cache..."
+  log_info "Updating system packages and refreshing cache..."
   if ! dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh; then
-    warn "Security update failed or no updates available"
+    log_warn "Security update failed or no updates available"
   fi
 }
 
@@ -57,13 +57,13 @@ install_package_group() {
   shift
   local packages=("$@")
   
-  info "Installing $group_name..."
+  log_info "Installing $group_name..."
   
   # Check which packages are already installed (faster batch check)
   local to_install=()
   local already_installed=()
   
-  info "Checking package status..."
+  log_info "Checking package status..."
   for package in "${packages[@]}"; do
     if rpm -q "$package" >/dev/null 2>&1; then
       already_installed+=("$package")
@@ -74,18 +74,18 @@ install_package_group() {
   
   # Report already installed packages
   if [[ ${#already_installed[@]} -gt 0 ]]; then
-    info "✓ Already installed: ${already_installed[*]}"
+    log_info "✓ Already installed: ${already_installed[*]}"
   fi
   
   # Install missing packages in batch (much faster)
   if [[ ${#to_install[@]} -gt 0 ]]; then
-    info "Installing missing packages: ${to_install[*]}"
+    log_info "Installing missing packages: ${to_install[*]}"
     
     # Use pkg-install for better retry logic and optimization
     if pkg-install "${to_install[@]}"; then
-      info "✓ All packages installed successfully"
+      log_info "✓ All packages installed successfully"
     else
-      warn "⚠ Some packages may have failed, checking individual status..."
+      log_warn "⚠ Some packages may have failed, checking individual status..."
       
       # Fallback: check which ones actually failed
       local failed_packages=()
@@ -96,70 +96,70 @@ install_package_group() {
       done
       
       if [[ ${#failed_packages[@]} -gt 0 ]]; then
-        warn "Failed packages: ${failed_packages[*]}"
+        log_warn "Failed packages: ${failed_packages[*]}"
         # Try individual installation for failed packages
         for package in "${failed_packages[@]}"; do
-          info "Retrying individual install: $package"
+          log_info "Retrying individual install: $package"
           if pkg-install "$package"; then
-            info "✓ $package installed on retry"
+            log_info "✓ $package installed on retry"
           else
-            warn "✗ $package installation failed completely"
+            log_warn "✗ $package installation failed completely"
           fi
         done
       fi
     fi
   else
-    info "✓ All packages already installed"
+    log_info "✓ All packages already installed"
   fi
   
-  info "$group_name installation completed!"
+  log_info "$group_name installation completed!"
 }
 
 configure_system() {
-  info "Configuring basic system settings..."
+  log_info "Configuring basic system settings..."
   
   # Set timezone if TZ variable is available
   if [[ -n "${TZ:-}" ]]; then
-    info "Setting timezone to: $TZ"
+    log_info "Setting timezone to: $TZ"
     if [[ -f "/usr/share/zoneinfo/$TZ" ]]; then
       ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime
       echo "$TZ" > /etc/timezone
     else
-      warn "Timezone $TZ not found, keeping default"
+      log_warn "Timezone $TZ not found, keeping default"
     fi
   fi
   
   # Set locale
-  info "Configuring locale settings..."
+  log_info "Configuring locale settings..."
   if command -v localectl >/dev/null 2>&1; then
     # Try to set locale, but don't fail if systemd is not running
     if systemctl is-system-running >/dev/null 2>&1 || [[ -z "${SYSTEMD_IGNORE_CHROOT:-}" ]]; then
-      localectl set-locale LANG=en_US.UTF-8 2>/dev/null || warn "Failed to set locale via localectl"
+      localectl set-locale LANG=en_US.UTF-8 2>/dev/null || log_warn "Failed to set locale via localectl"
     else
-      info "Systemd not available, setting locale manually..."
+      log_info "Systemd not available, setting locale manually..."
       echo 'LANG=en_US.UTF-8' > /etc/locale.conf
     fi
   else
-    info "localectl not available, setting locale manually..."
+    log_info "localectl not available, setting locale manually..."
     echo 'LANG=en_US.UTF-8' > /etc/locale.conf
   fi
   
-  info "System configuration completed!"
+  log_info "System configuration completed!"
 }
 
 main() {
-  info "Starting core system foundation setup..."
+  log_info "Starting core system foundation setup..."
   
   # Step 1: Repository setup
   setup_repositories
   
   # Step 2: Install all packages in optimized batches
-  info "Installing all packages in optimized batches..."
+  log_info "Installing all packages in optimized batches..."
   
   # Combine all packages for single transaction (fastest approach)
   local all_packages=("${CORE_PACKAGES[@]}" "${LOCALE_PACKAGES[@]}")
   
-  info "Checking status of ${#all_packages[@]} packages..."
+  log_info "Checking status of ${#all_packages[@]} packages..."
   local to_install=()
   local already_installed=()
   
@@ -174,31 +174,31 @@ main() {
   
   # Report status
   if [[ ${#already_installed[@]} -gt 0 ]]; then
-    info "✓ Already installed (${#already_installed[@]}): ${already_installed[*]}"
+    log_info "✓ Already installed (${#already_installed[@]}): ${already_installed[*]}"
   fi
   
   # Install all missing packages in single transaction
   if [[ ${#to_install[@]} -gt 0 ]]; then
-    info "Installing ${#to_install[@]} missing packages in single transaction..."
-    info "Packages: ${to_install[*]}"
+    log_info "Installing ${#to_install[@]} missing packages in single transaction..."
+    log_info "Packages: ${to_install[*]}"
     
     if pkg-install "${to_install[@]}"; then
-      info "✓ All ${#to_install[@]} packages installed successfully"
+      log_info "✓ All ${#to_install[@]} packages installed successfully"
     else
-      warn "⚠ Batch installation failed, falling back to individual checks..."
+      log_warn "⚠ Batch installation failed, falling back to individual checks..."
       
       # Fallback to group installation for better error handling
       install_package_group "Core System Packages" "${CORE_PACKAGES[@]}"
       install_package_group "Locale Packages" "${LOCALE_PACKAGES[@]}"
     fi
   else
-    info "✓ All packages already installed, skipping installation"
+    log_info "✓ All packages already installed, skipping installation"
   fi
   
   # Step 3: Configure system
   configure_system
   
-  info "Core system foundation setup completed successfully!"
+  log_info "Core system foundation setup completed successfully!"
 }
 
 main "$@"
