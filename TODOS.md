@@ -9,16 +9,16 @@
 
   
 - [ ] Install
-  - [ ] ansible.sh
+  - [-] ansible.sh
   - [x] aws-cli.sh
   - [x] bash-commons.sh
   - [x] cloudflared.sh
-  - [ ] dbbeaver.sh
-  - [ ] docker.sh
+  - [x] dbbeaver.sh
+  - [x] docker.sh
   - [x] dry.sh
   - [x] getoptions.sh
   - [x] github-cli.sh
-  - [ ] gotemplate.sh
+  - [x] gotemplate.sh
   - [x] gum.sh
   - [x] lazydocker.sh
   - [x] lazygit.sh
@@ -26,10 +26,18 @@
   - [x] starship.sh
   - [x] tailscale.sh
   - [x] task.sh
-  - [ ] teleport.sh
+  - [x] teleport.sh
   - [x] terraform.sh
-  - [ ] volta.sh
-  - [ ] wp-cli.sh
+  - [x] volta.sh
+  - [x] wp-cli.sh
+  - [x] kubectl.sh
+  - [x] helm.sh
+  - [x] k9s.sh
+  - [ ] thefuck / tldr / zoxide / webdriver / 
+  - [ ] neovim
+  - [ ] OPENSSH_SERVER_VERSION
+  - [ ] CRONTAB_VERSION
+  - [ ] SUPERVISOR_VERSION
 
 ## Q & A
 

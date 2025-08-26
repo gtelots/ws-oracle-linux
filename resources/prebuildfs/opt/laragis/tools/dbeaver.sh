@@ -1,46 +1,45 @@
 #!/usr/bin/env bash
 # =============================================================================
-# volta
+# dbbeaver
 # =============================================================================
-# DESCRIPTION: The Hassle-Free JavaScript Tool Manager
-# URL: https://github.com/volta-cli/volta
-# VERSION: v2.0.2
+# DESCRIPTION: Universal Database Tool
+# URL: https://github.com/dbeaver/dbeaver
+# VERSION: v25.1.5
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # =============================================================================
 
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/arch.sh
 . /opt/laragis/lib/os.sh
 
 # Configuration
-readonly TOOL_NAME="volta"
-readonly TOOL_VERSION="${VOLTA_VERSION:-2.0.2}"
+readonly TOOL_NAME="dbeaver"
+readonly TOOL_VERSION="${DBEAVER_VERSION:-25.1.5}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { command -v "$TOOL_NAME" >/dev/null 2>&1 || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
   local os="$(detect_os)"
-  local download_url="https://github.com/volta-cli/volta/releases/download/v${TOOL_VERSION}/volta-${TOOL_VERSION}-${os}.tar.gz"
+  local arch="$(arch_auto)"
+  local download_url="https://github.com/dbeaver/dbeaver/releases/download/${TOOL_VERSION}/dbeaver-ce-${TOOL_VERSION}-stable.${arch}.rpm"
   
   local temp_dir="$(mktemp -d)"
-  local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
+  local rpm_file="${temp_dir}/${TOOL_NAME}.rpm"
 
   # Setup temporary directory and cleanup trap
   mkdir -p "$temp_dir" && trap "rm -rf '${temp_dir}'" EXIT
   
-  # Download -> extract -> install binary
-  curl -fsSL -o "${tar_file}" "${download_url}" && \
-  tar -xzf "${tar_file}" -C "${temp_dir}" && \
-  install -m 0755 "${temp_dir}/volta" "${INSTALL_DIR}/volta" && \
-  install -m 0755 "${temp_dir}/volta-migrate" "${INSTALL_DIR}/volta-migrate" && \
-  install -m 0755 "${temp_dir}/volta-shim" "${INSTALL_DIR}/volta-shim"
+  # Download -> install
+  curl -fsSL -o "${rpm_file}" "${download_url}" && \
+  dnf install -y "${rpm_file}"
 
   # Verify installation
-  os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }
+  command -v "$TOOL_NAME" >/dev/null 2>&1 || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
   mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"

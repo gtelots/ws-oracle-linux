@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
 # =============================================================================
-# volta
+# k9s
 # =============================================================================
-# DESCRIPTION: The Hassle-Free JavaScript Tool Manager
-# URL: https://github.com/volta-cli/volta
-# VERSION: v2.0.2
+# DESCRIPTION: Kubernetes CLI To Manage Your Clusters In Style!
+# URL: https://github.com/derailed/k9s
+# VERSION: v0.50.9
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # =============================================================================
 
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/arch.sh
 . /opt/laragis/lib/os.sh
 
 # Configuration
-readonly TOOL_NAME="volta"
-readonly TOOL_VERSION="${VOLTA_VERSION:-2.0.2}"
+readonly TOOL_NAME="k9s"
+readonly TOOL_VERSION="${K9S_VERSION:-0.50.9}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
@@ -24,8 +25,9 @@ is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE"
 
 install_tool(){
   local os="$(detect_os)"
-  local download_url="https://github.com/volta-cli/volta/releases/download/v${TOOL_VERSION}/volta-${TOOL_VERSION}-${os}.tar.gz"
-  
+  local arch="$(arch_auto deb)"
+  local download_url="https://github.com/derailed/k9s/releases/download/v${TOOL_VERSION}/k9s_${os^}_${arch}.tar.gz"
+ 
   local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
 
@@ -35,9 +37,7 @@ install_tool(){
   # Download -> extract -> install binary
   curl -fsSL -o "${tar_file}" "${download_url}" && \
   tar -xzf "${tar_file}" -C "${temp_dir}" && \
-  install -m 0755 "${temp_dir}/volta" "${INSTALL_DIR}/volta" && \
-  install -m 0755 "${temp_dir}/volta-migrate" "${INSTALL_DIR}/volta-migrate" && \
-  install -m 0755 "${temp_dir}/volta-shim" "${INSTALL_DIR}/volta-shim"
+  install -m 0755 "${temp_dir}/${TOOL_NAME}" "${INSTALL_DIR}/${TOOL_NAME}"
 
   # Verify installation
   os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }

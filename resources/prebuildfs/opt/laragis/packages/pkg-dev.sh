@@ -14,10 +14,9 @@
 # - Added: vim-enhanced (standard alternative to neovim)
 # =============================================================================
 
-set -euo pipefail
-
 # Load libraries
-. /opt/laragis/scripts/liblog.sh
+. /opt/laragis/lib/bootstrap.sh
+. /opt/laragis/lib/log.sh
 
 # Development tools grouped by category
 readonly COMPILERS=(

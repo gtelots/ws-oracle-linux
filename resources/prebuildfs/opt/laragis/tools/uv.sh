@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
 # =============================================================================
-# volta
+# uv
 # =============================================================================
-# DESCRIPTION: The Hassle-Free JavaScript Tool Manager
-# URL: https://github.com/volta-cli/volta
-# VERSION: v2.0.2
+# DESCRIPTION: An extremely fast Python package and project manager, written in Rust.
+# URL: https://github.com/astral-sh/uv
+# VERSION: v0.8.13
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # =============================================================================
 
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/arch.sh
 . /opt/laragis/lib/os.sh
 
 # Configuration
-readonly TOOL_NAME="volta"
-readonly TOOL_VERSION="${VOLTA_VERSION:-2.0.2}"
+readonly TOOL_NAME="uv"
+readonly TOOL_VERSION="${UV_VERSION:-0.8.13}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
@@ -24,7 +25,8 @@ is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE"
 
 install_tool(){
   local os="$(detect_os)"
-  local download_url="https://github.com/volta-cli/volta/releases/download/v${TOOL_VERSION}/volta-${TOOL_VERSION}-${os}.tar.gz"
+  local arch="$(arch_auto)"
+  local download_url="https://github.com/astral-sh/uv/releases/download/${TOOL_VERSION}/uv-${arch}-unknown-${os}-gnu.tar.gz"
   
   local temp_dir="$(mktemp -d)"
   local tar_file="${temp_dir}/${TOOL_NAME}.tar.gz"
@@ -34,10 +36,9 @@ install_tool(){
   
   # Download -> extract -> install binary
   curl -fsSL -o "${tar_file}" "${download_url}" && \
-  tar -xzf "${tar_file}" -C "${temp_dir}" && \
-  install -m 0755 "${temp_dir}/volta" "${INSTALL_DIR}/volta" && \
-  install -m 0755 "${temp_dir}/volta-migrate" "${INSTALL_DIR}/volta-migrate" && \
-  install -m 0755 "${temp_dir}/volta-shim" "${INSTALL_DIR}/volta-shim"
+  tar -xzf "${tar_file}" -C "${temp_dir}" --strip-components=1 && \
+  install -m 0755 "${temp_dir}/uv" "${INSTALL_DIR}/uv" && \
+  install -m 0755 "${temp_dir}/uvx" "${INSTALL_DIR}/uvx"
 
   # Verify installation
   os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }

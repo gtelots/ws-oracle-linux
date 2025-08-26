@@ -75,7 +75,7 @@ main() {
   chown -R "${USER_UID}:${USER_GID}" "${HOME_DIR}"
   chmod 700 "${HOME_DIR}/.ssh"
 
-  log success "OK: user ${USER_NAME} ready (sudo=${SUDO_POLICY})"
+  echo "OK: user ${USER_NAME} ready (sudo=${SUDO_POLICY})"
 }
 
 # Run main function

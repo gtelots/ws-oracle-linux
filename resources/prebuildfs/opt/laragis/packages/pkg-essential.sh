@@ -7,10 +7,9 @@
 # VERSION: 1.0.0
 # =============================================================================
 
-set -euo pipefail
-
 # Load libraries
-. /opt/laragis/scripts/liblog.sh
+. /opt/laragis/lib/bootstrap.sh
+. /opt/laragis/lib/log.sh
 
 # Essential packages grouped by category
 readonly NETWORK_TOOLS=(
