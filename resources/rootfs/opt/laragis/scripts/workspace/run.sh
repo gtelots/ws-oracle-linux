@@ -4,5 +4,4 @@
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
 
-sleep infinity
-# /usr/local/bin/supervisord -n -c /etc/supervisord.conf
+/usr/local/bin/supervisord -n -c /opt/laragis/supervisor/conf.d/supervisord.conf

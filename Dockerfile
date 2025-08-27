@@ -65,42 +65,42 @@ COPY resources/prebuildfs/usr/ /usr/
 
 # SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
-# --------------------------------------------------------------------------
-# System Update
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # System Update
+# # --------------------------------------------------------------------------
 
-RUN dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh;
+# RUN dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh;
 
-# --------------------------------------------------------------------------
-# User Setup
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # User Setup
+# # --------------------------------------------------------------------------
 
-# Setup non-root user + sudo (wheel)
-COPY resources/prebuildfs/opt/laragis/setup/setup-user.sh /opt/laragis/setup/setup-user.sh
-RUN ROOT_PASSWORD="${ROOT_PASSWORD}" USER_PASSWORD="${USER_PASSWORD}" ./opt/laragis/setup/setup-user.sh
+# # Setup non-root user + sudo (wheel)
+# COPY resources/prebuildfs/opt/laragis/setup/setup-user.sh /opt/laragis/setup/setup-user.sh
+# RUN ROOT_PASSWORD="${ROOT_PASSWORD}" USER_PASSWORD="${USER_PASSWORD}" ./opt/laragis/setup/setup-user.sh
 
-ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
+# ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
 
-# --------------------------------------------------------------------------
-# Locale Setup
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # Locale Setup
+# # --------------------------------------------------------------------------
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# --------------------------------------------------------------------------
-# Repo Setup
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # Repo Setup
+# # --------------------------------------------------------------------------
 
-RUN dnf -y config-manager --enable ol9_developer_EPEL
+# RUN dnf -y config-manager --enable ol9_developer_EPEL
 
 # --------------------------------------------------------------------------
 # Package Installations
 # --------------------------------------------------------------------------
 
-# Core System Packages Installation
-# dnf-plugins-core
-COPY resources/prebuildfs/opt/laragis/packages/pkg-core.sh /opt/laragis/packages/pkg-core.sh
-RUN /opt/laragis/packages/pkg-core.sh
+# # Core System Packages Installation
+# # dnf-plugins-core
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-core.sh /opt/laragis/packages/pkg-core.sh
+# RUN /opt/laragis/packages/pkg-core.sh
 
 ARG PYTHON_VERSION=3.12
 ENV PYTHON_VERSION="${PYTHON_VERSION}"
@@ -131,14 +131,14 @@ ARG SUPERVISOR_VERSION=4.3.0
 COPY resources/prebuildfs/opt/laragis/tools/supervisor.sh /opt/laragis/tools/supervisor.sh
 RUN SUPERVISOR_VERSION="${SUPERVISOR_VERSION}" /opt/laragis/tools/supervisor.sh
 
-# --------------------------------------------------------------------------
-# ansible - Radically simple IT automation platform
-# Repo: https://github.com/ansible/ansible
-# --------------------------------------------------------------------------
-ARG ANSIBLE_VERSION=11.9.0
+# # --------------------------------------------------------------------------
+# # ansible - Radically simple IT automation platform
+# # Repo: https://github.com/ansible/ansible
+# # --------------------------------------------------------------------------
+# ARG ANSIBLE_VERSION=11.9.0
 
-COPY resources/prebuildfs/opt/laragis/tools/ansible.sh /opt/laragis/tools/ansible.sh
-RUN ANSIBLE_VERSION="${ANSIBLE_VERSION}" /opt/laragis/tools/ansible.sh
+# COPY resources/prebuildfs/opt/laragis/tools/ansible.sh /opt/laragis/tools/ansible.sh
+# RUN ANSIBLE_VERSION="${ANSIBLE_VERSION}" /opt/laragis/tools/ansible.sh
 
 # # --------------------------------------------------------------------------
 # # k6 - A modern load testing tool, using Go and JavaScript
@@ -383,18 +383,18 @@ RUN ANSIBLE_VERSION="${ANSIBLE_VERSION}" /opt/laragis/tools/ansible.sh
 # --------------------------------------------------------------------------
 
 
-# --------------------------------------------------------------------------
-# 
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # 
+# # --------------------------------------------------------------------------
 
-COPY resources/ca-certificates/* /usr/local/share/ca-certificates/
-RUN update-ca-trust
+# COPY resources/ca-certificates/* /usr/local/share/ca-certificates/
+# RUN update-ca-trust
 
-# --------------------------------------------------------------------------
-# 
-# --------------------------------------------------------------------------
+# # --------------------------------------------------------------------------
+# # 
+# # --------------------------------------------------------------------------
 
-COPY resources/.ssh ${HOME_DIR}/.ssh
+# COPY resources/.ssh ${HOME_DIR}/.ssh
 
 # --------------------------------------------------------------------------
 # 
@@ -411,7 +411,7 @@ RUN mkdir -p ${WORKSPACE_DIR} && chown ${USER_UID}:${USER_GID} ${WORKSPACE_DIR}
 
 # RUN dnf clean all && rm -rf /var/cache/dnf/* /root/.cache/* /tmp/*
 
-EXPOSE 2222 9001
+EXPOSE 2222 9001 80 443
 
 #--------------------------------------------------------------------------
 # Container startup configuration
