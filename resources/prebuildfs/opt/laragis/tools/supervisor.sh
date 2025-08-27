@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
-# ansible
+# Supervisor
 # =============================================================================
-# DESCRIPTION: Ansible is a radically simple IT automation platform
-# URL: https://github.com/ansible/ansible
-# VERSION: v11.9.0
+# DESCRIPTION: Supervisor is a process control system
+# URL: https://github.com/Supervisor/supervisor
+# VERSION: v4.3.0
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # =============================================================================
 
@@ -15,19 +15,19 @@
 . /opt/laragis/lib/os.sh
 
 # Configuration
-readonly TOOL_NAME="ansible"
-readonly TOOL_VERSION="${ANSIBLE_VERSION:-11.9.0}"
+readonly TOOL_NAME="supervisor"
+readonly TOOL_VERSION="${SUPERVISOR_VERSION:-4.3.0}"
 readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
 readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/${TOOL_NAME}.installed"
 readonly INSTALL_DIR="${INSTALL_DIR:-/usr/local/bin}"
 
-is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
+is_installed() { os_command_is_installed supervisord || [[ -f "$TOOL_LOCK_FILE" ]]; }
 
 install_tool(){
-  pipx install --global --include-deps ansible=="${TOOL_VERSION}"
+  pipx install --global supervisor=="${TOOL_VERSION}"
 
   # Verify installation
-  os_command_is_installed "$TOOL_NAME" || { error "${TOOL_NAME} installation verification failed"; return 1; }
+  os_command_is_installed supervisord || { error "${TOOL_NAME} installation verification failed"; return 1; }
 
   # Create lock file
   mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"

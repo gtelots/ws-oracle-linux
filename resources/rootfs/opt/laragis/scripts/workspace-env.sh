@@ -12,7 +12,7 @@
 
 # Load logging library
 # shellcheck disable=SC1090,SC1091
-. /opt/laragis/scripts/liblog.sh
+. /opt/laragis/lib/log.sh
 
 export LARAGIS_ROOT_DIR="/opt/laragis"
 export LARAGIS_VOLUME_DIR="/laragis"

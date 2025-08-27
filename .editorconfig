@@ -44,6 +44,9 @@ indent_size = 2
 # Infrastructure & DevOps - use defaults (2 spaces)
 # =============================================================================
 # [Dockerfile*, docker-compose*.{yml,yaml}, *.{tf,tfvars}] - uses defaults
+[Dockerfile*, docker-compose*.{yml,yaml}, *.{tf,tfvars}]
+indent_style = space
+indent_size = 2
 
 # =============================================================================
 # Programming Languages - Only override when different from default

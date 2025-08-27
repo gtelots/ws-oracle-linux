@@ -15,7 +15,7 @@ set -o pipefail
 if [[ -f /opt/bitnami/base/functions ]]; then
     . /opt/laragis/base/functions
 else
-    . /opt/laragis/scripts/liblog.sh
+    . /opt/laragis/lib/log.sh
 fi
 
 # Loop through all input files passed via stdin

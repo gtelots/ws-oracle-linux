@@ -24,15 +24,15 @@ services:
         ROOT_PASSWORD: ${ROOT_PASSWORD}
         USER_PASSWORD: ${USER_PASSWORD}
         INSTALL_GITHUB_CLI: ${INSTALL_GITHUB_CLI}
-    restart: unless-stopped
+    # restart: unless-stopped
     working_dir: ${HOME_DIR}
-    tty: true
+    # tty: true
     # ports:
     #   - "${SSH_FORWARD_PORT}:${SSH_PORT}"
     networks:
       - ws-net
-    volumes:    
-      # - home_data:/home/${USER_NAME}
-      - ./resources/prebuildfs/opt/laragis/common/tools/04-modern-pkgs.sh:/opt/laragis/common/tools/04-modern-pkgs.sh
+    # volumes:    
+    #   # - home_data:/home/${USER_NAME}
+    #   - ./resources/prebuildfs/opt/laragis/common/tools/04-modern-pkgs.sh:/opt/laragis/common/tools/04-modern-pkgs.sh
 
 

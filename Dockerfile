@@ -66,6 +66,12 @@ COPY resources/prebuildfs/usr/ /usr/
 # SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
 # --------------------------------------------------------------------------
+# System Update
+# --------------------------------------------------------------------------
+
+RUN dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh;
+
+# --------------------------------------------------------------------------
 # User Setup
 # --------------------------------------------------------------------------
 
@@ -76,172 +82,54 @@ RUN ROOT_PASSWORD="${ROOT_PASSWORD}" USER_PASSWORD="${USER_PASSWORD}" ./opt/lara
 ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
 
 # --------------------------------------------------------------------------
+# Locale Setup
+# --------------------------------------------------------------------------
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# --------------------------------------------------------------------------
+# Repo Setup
+# --------------------------------------------------------------------------
+
+RUN dnf -y config-manager --enable ol9_developer_EPEL
+
+# --------------------------------------------------------------------------
 # Package Installations
 # --------------------------------------------------------------------------
 
 # Core System Packages Installation
+# dnf-plugins-core
 COPY resources/prebuildfs/opt/laragis/packages/pkg-core.sh /opt/laragis/packages/pkg-core.sh
 RUN /opt/laragis/packages/pkg-core.sh
 
-# Essential System Utilities Installation
-COPY resources/prebuildfs/opt/laragis/packages/pkg-essential.sh /opt/laragis/packages/pkg-essential.sh
-RUN /opt/laragis/packages/pkg-essential.sh
+ARG PYTHON_VERSION=3.12
+ENV PYTHON_VERSION="${PYTHON_VERSION}"
 
-# Development Tools & Libraries Installation
-COPY resources/prebuildfs/opt/laragis/packages/pkg-dev.sh /opt/laragis/packages/pkg-dev.sh
-RUN /opt/laragis/packages/pkg-dev.sh
+RUN dnf install -y --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
+      python3 python3-pip python3-setuptools python3-devel \
+      python${PYTHON_VERSION} python${PYTHON_VERSION}-pip python${PYTHON_VERSION}-setuptools python${PYTHON_VERSION}-wheel python${PYTHON_VERSION}-devel && \
+      pip${PYTHON_VERSION} install pipx
 
-# # Enhanced Development Tools Installation Script
-# COPY resources/prebuildfs/opt/laragis/packages/pkg-modern.sh /opt/laragis/packages/pkg-modern.sh
-# RUN /opt/laragis/packages/pkg-modern.sh
+# # Essential System Utilities Installation
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-essential.sh /opt/laragis/packages/pkg-essential.sh
+# RUN /opt/laragis/packages/pkg-essential.sh
 
-# --------------------------------------------------------------------------
-# k6 - A modern load testing tool, using Go and JavaScript
-# Repo: https://github.com/grafana/k6
-# --------------------------------------------------------------------------
-ARG K6_VERSION=1.2.2
+# # Development Tools & Libraries Installation
+# COPY resources/prebuildfs/opt/laragis/packages/pkg-dev.sh /opt/laragis/packages/pkg-dev.sh
+# RUN /opt/laragis/packages/pkg-dev.sh
 
-COPY resources/prebuildfs/opt/laragis/tools/k6.sh /opt/laragis/tools/k6.sh
-RUN K6_VERSION="${K6_VERSION}" /opt/laragis/tools/k6.sh
-
-# --------------------------------------------------------------------------
-# Zellij - A terminal workspace with batteries included
-# Repo: https://github.com/zellij-org/zellij
-# --------------------------------------------------------------------------
-ARG ZELLIJ_VERSION=0.43.1
-
-COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
-RUN ZELLIJ_VERSION="${ZELLIJ_VERSION}" /opt/laragis/tools/gum.sh
+# # # Enhanced Development Tools Installation Script
+# # COPY resources/prebuildfs/opt/laragis/packages/pkg-modern.sh /opt/laragis/packages/pkg-modern.sh
+# # RUN /opt/laragis/packages/pkg-modern.sh
 
 # --------------------------------------------------------------------------
-# Gum - A tool for glamorous shell scripts
-# Repo: https://github.com/charmbracelet/gum
+# Supervisor - Supervisor is a process control system
+# Repo: https://github.com/Supervisor/supervisor
 # --------------------------------------------------------------------------
-ARG GUM_VERSION=0.16.2
+ARG SUPERVISOR_VERSION=4.3.0
 
-COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
-RUN GUM_VERSION="${GUM_VERSION}" /opt/laragis/tools/gum.sh
-
-# --------------------------------------------------------------------------
-# getoptions - An elegant option/argument parser for shell scripts
-# Repo: https://github.com/ko1nksm/getoptions
-# --------------------------------------------------------------------------
-ARG GETOPTIONS_VERSION=3.3.2
-
-COPY resources/prebuildfs/opt/laragis/tools/getoptions.sh /opt/laragis/tools/getoptions.sh
-RUN GETOPTIONS_VERSION="${GETOPTIONS_VERSION}" /opt/laragis/tools/getoptions.sh
-
-# --------------------------------------------------------------------------
-# awscli - Universal Command Line Interface for Amazon Web Services
-# Repo: https://github.com/aws/aws-cli
-# --------------------------------------------------------------------------
-ARG AWS_CLI_VERSION=2.28.16
-
-COPY resources/prebuildfs/opt/laragis/tools/aws-cli.sh /opt/laragis/tools/aws-cli.sh
-RUN AWS_CLI_VERSION="${AWS_CLI_VERSION}" /opt/laragis/tools/aws-cli.sh
-
-# --------------------------------------------------------------------------
-# dry - A Docker manager for the terminal
-# Repo: https://github.com/moncho/dry
-# --------------------------------------------------------------------------
-ARG DRY_VERSION=0.11.2
-
-COPY resources/prebuildfs/opt/laragis/tools/dry.sh /opt/laragis/tools/dry.sh
-RUN DRY_VERSION="${DRY_VERSION}" /opt/laragis/tools/dry.sh
-
-# --------------------------------------------------------------------------
-# lazydocker - The lazier way to manage everything docker
-# Repo: https://github.com/jesseduffield/lazydocker
-# --------------------------------------------------------------------------
-ARG LAZYDOCKER_VERSION=0.24.1
-
-COPY resources/prebuildfs/opt/laragis/tools/lazydocker.sh /opt/laragis/tools/lazydocker.sh
-RUN LAZYDOCKER_VERSION="${LAZYDOCKER_VERSION}" /opt/laragis/tools/lazydocker.sh
-
-# --------------------------------------------------------------------------
-# Github Cli - GitHub’s official command line tool
-# Repo: https://github.com/cli/cli
-# --------------------------------------------------------------------------
-ARG GITHUB_CLI_VERSION=2.78.0
-ARG GH_TOKEN
-ENV GH_TOKEN=${GH_TOKEN}
-
-COPY resources/prebuildfs/opt/laragis/tools/github-cli.sh /opt/laragis/tools/github-cli.sh
-RUN GITHUB_CLI_VERSION="${GITHUB_CLI_VERSION}" /opt/laragis/tools/github-cli.sh
-
-# --------------------------------------------------------------------------
-# cloudflared - Cloudflare Tunnel client (formerly Argo Tunnel)
-# Repo: https://github.com/cloudflare/cloudflared
-# --------------------------------------------------------------------------
-ARG CLOUDFLARED_VERSION=2025.8.1
-
-COPY resources/prebuildfs/opt/laragis/tools/cloudflared.sh /opt/laragis/tools/cloudflared.sh
-RUN CLOUDFLARED_VERSION="${CLOUDFLARED_VERSION}" /opt/laragis/tools/cloudflared.sh
-
-# --------------------------------------------------------------------------
-# lazygit - simple terminal UI for git commands
-# Repo: https://github.com/jesseduffield/lazygit
-# --------------------------------------------------------------------------
-ARG LAZYGIT_VERSION=0.54.2
-
-COPY resources/prebuildfs/opt/laragis/tools/lazygit.sh /opt/laragis/tools/lazygit.sh
-RUN LAZYGIT_VERSION="${LAZYGIT_VERSION}" /opt/laragis/tools/lazygit.sh
-
-# --------------------------------------------------------------------------
-# ngrox - front door—and the fastest way to put anything on the internet
-# Repo: https://ngrok.com
-# --------------------------------------------------------------------------
-ARG NGROK_VERSION=3.26.0
-ARG NGROK_AUTHTOKEN
-ENV NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
-
-COPY resources/prebuildfs/opt/laragis/tools/ngrok.sh /opt/laragis/tools/ngrok.sh
-RUN NGROK_VERSION="${NGROK_VERSION}" /opt/laragis/tools/ngrok.sh
-
-# --------------------------------------------------------------------------
-# starship - The minimal, blazing-fast, and infinitely customizable prompt for any shell!
-# Repo: https://github.com/starship/starship
-# --------------------------------------------------------------------------
-ARG STARSHIP_VERSION=1.23.0
-
-COPY resources/prebuildfs/opt/laragis/tools/starship.sh /opt/laragis/tools/starship.sh
-RUN STARSHIP_VERSION="${STARSHIP_VERSION}" /opt/laragis/tools/starship.sh
-
-# --------------------------------------------------------------------------
-# tailscale - The easiest, most secure way to use WireGuard and 2FA.
-# Repo: https://github.com/tailscale/tailscale
-# --------------------------------------------------------------------------
-ARG TAILSCALE_VERSION=1.86.2
-
-COPY resources/prebuildfs/opt/laragis/tools/tailscale.sh /opt/laragis/tools/tailscale.sh
-RUN TAILSCALE_VERSION="${TAILSCALE_VERSION}" /opt/laragis/tools/tailscale.sh
-
-# --------------------------------------------------------------------------
-# task - A task runner / simpler Make alternative written in Go
-# Repo: https://github.com/go-task/task
-# --------------------------------------------------------------------------
-ARG TASK_VERSION=3.44.1
-
-COPY resources/prebuildfs/opt/laragis/tools/task.sh /opt/laragis/tools/task.sh
-RUN TASK_VERSION="${TASK_VERSION}" /opt/laragis/tools/task.sh
-
-# --------------------------------------------------------------------------
-# Terraform - A tool for building, changing, and versioning infrastructure safely and efficiently
-# Repo: https://github.com/hashicorp/terraform
-# --------------------------------------------------------------------------
-ARG TERRAFORM_VERSION=1.13.0
-
-COPY resources/prebuildfs/opt/laragis/tools/terraform.sh /opt/laragis/tools/terraform.sh
-RUN TERRAFORM_VERSION="${TERRAFORM_VERSION}" /opt/laragis/tools/terraform.sh
-
-# --------------------------------------------------------------------------
-# Teleport - The easiest, and most secure way to access and protect all of your infrastructure.
-# Repo: https://github.com/gravitational/teleport
-# --------------------------------------------------------------------------
-ARG TELEPORT_VERSION=18.1.6
-
-COPY resources/prebuildfs/opt/laragis/tools/teleport.sh /opt/laragis/tools/teleport.sh
-RUN TELEPORT_VERSION="${TELEPORT_VERSION}" /opt/laragis/tools/teleport.sh
+COPY resources/prebuildfs/opt/laragis/tools/supervisor.sh /opt/laragis/tools/supervisor.sh
+RUN SUPERVISOR_VERSION="${SUPERVISOR_VERSION}" /opt/laragis/tools/supervisor.sh
 
 # --------------------------------------------------------------------------
 # ansible - Radically simple IT automation platform
@@ -252,95 +140,243 @@ ARG ANSIBLE_VERSION=11.9.0
 COPY resources/prebuildfs/opt/laragis/tools/ansible.sh /opt/laragis/tools/ansible.sh
 RUN ANSIBLE_VERSION="${ANSIBLE_VERSION}" /opt/laragis/tools/ansible.sh
 
-# --------------------------------------------------------------------------
-# kubectl - Kubernetes command-line tool
-# Repo: https://github.com/kubernetes/kubernetes
-# --------------------------------------------------------------------------
-ARG KUBECTL_VERSION=1.31.12
+# # --------------------------------------------------------------------------
+# # k6 - A modern load testing tool, using Go and JavaScript
+# # Repo: https://github.com/grafana/k6
+# # --------------------------------------------------------------------------
+# ARG K6_VERSION=1.2.2
 
-COPY resources/prebuildfs/opt/laragis/tools/kubectl.sh /opt/laragis/tools/kubectl.sh
-RUN KUBECTL_VERSION="${KUBECTL_VERSION}" /opt/laragis/tools/kubectl.sh
+# COPY resources/prebuildfs/opt/laragis/tools/k6.sh /opt/laragis/tools/k6.sh
+# RUN K6_VERSION="${K6_VERSION}" /opt/laragis/tools/k6.sh
 
-# --------------------------------------------------------------------------
-# helm - The Kubernetes Package Manager
-# Repo: https://github.com/helm/helm
-# --------------------------------------------------------------------------
-ARG HELM_VERSION=3.18.6
+# # --------------------------------------------------------------------------
+# # Zellij - A terminal workspace with batteries included
+# # Repo: https://github.com/zellij-org/zellij
+# # --------------------------------------------------------------------------
+# ARG ZELLIJ_VERSION=0.43.1
 
-COPY resources/prebuildfs/opt/laragis/tools/helm.sh /opt/laragis/tools/helm.sh
-RUN HELM_VERSION="${HELM_VERSION}" /opt/laragis/tools/helm.sh
+# COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
+# RUN ZELLIJ_VERSION="${ZELLIJ_VERSION}" /opt/laragis/tools/gum.sh
 
-# --------------------------------------------------------------------------
-# k9s - Kubernetes CLI To Manage Your Clusters In Style
-# Repo: https://github.com/derailed/k9s
-# --------------------------------------------------------------------------
-ARG K9S_VERSION=0.50.9
+# # --------------------------------------------------------------------------
+# # Gum - A tool for glamorous shell scripts
+# # Repo: https://github.com/charmbracelet/gum
+# # --------------------------------------------------------------------------
+# ARG GUM_VERSION=0.16.2
 
-COPY resources/prebuildfs/opt/laragis/tools/k9s.sh /opt/laragis/tools/k9s.sh
-RUN K9S_VERSION="${K9S_VERSION}" /opt/laragis/tools/k9s.sh
+# COPY resources/prebuildfs/opt/laragis/tools/gum.sh /opt/laragis/tools/gum.sh
+# RUN GUM_VERSION="${GUM_VERSION}" /opt/laragis/tools/gum.sh
 
-# --------------------------------------------------------------------------
-# gomplate - A flexible commandline tool for template rendering
-# Repo: https://github.com/hairyhenderson/gomplate
-# --------------------------------------------------------------------------
-ARG GOMPLATE_VERSION=4.3.3
+# # --------------------------------------------------------------------------
+# # getoptions - An elegant option/argument parser for shell scripts
+# # Repo: https://github.com/ko1nksm/getoptions
+# # --------------------------------------------------------------------------
+# ARG GETOPTIONS_VERSION=3.3.2
 
-COPY resources/prebuildfs/opt/laragis/tools/gomplate.sh /opt/laragis/tools/gomplate.sh
-RUN GOMPLATE_VERSION="${GOMPLATE_VERSION}" /opt/laragis/tools/gomplate.sh
+# COPY resources/prebuildfs/opt/laragis/tools/getoptions.sh /opt/laragis/tools/getoptions.sh
+# RUN GETOPTIONS_VERSION="${GETOPTIONS_VERSION}" /opt/laragis/tools/getoptions.sh
 
-# --------------------------------------------------------------------------
-# dbeaver - DBeaver Community universal database tool
-# Repo: https://github.com/dbeaver/dbeaver
-# --------------------------------------------------------------------------
-ARG DBEAVER_VERSION=25.1.5
+# # --------------------------------------------------------------------------
+# # awscli - Universal Command Line Interface for Amazon Web Services
+# # Repo: https://github.com/aws/aws-cli
+# # --------------------------------------------------------------------------
+# ARG AWS_CLI_VERSION=2.28.16
 
-COPY resources/prebuildfs/opt/laragis/tools/dbeaver.sh /opt/laragis/tools/dbeaver.sh
-RUN DBEAVER_VERSION="${DBEAVER_VERSION}" /opt/laragis/tools/dbeaver.sh
+# COPY resources/prebuildfs/opt/laragis/tools/aws-cli.sh /opt/laragis/tools/aws-cli.sh
+# RUN AWS_CLI_VERSION="${AWS_CLI_VERSION}" /opt/laragis/tools/aws-cli.sh
 
-# --------------------------------------------------------------------------
-# mise - dev tools, env vars, task runner
-# Repo: https://github.com/jdx/mise
-# --------------------------------------------------------------------------
-ARG MISE_VERSION=2025.8.20
+# # --------------------------------------------------------------------------
+# # dry - A Docker manager for the terminal
+# # Repo: https://github.com/moncho/dry
+# # --------------------------------------------------------------------------
+# ARG DRY_VERSION=0.11.2
 
-COPY resources/prebuildfs/opt/laragis/tools/mise.sh /opt/laragis/tools/mise.sh
-RUN MISE_VERSION="${MISE_VERSION}" /opt/laragis/tools/mise.sh
+# COPY resources/prebuildfs/opt/laragis/tools/dry.sh /opt/laragis/tools/dry.sh
+# RUN DRY_VERSION="${DRY_VERSION}" /opt/laragis/tools/dry.sh
 
-# --------------------------------------------------------------------------
-# uv - An extremely fast Python package and project manager, written in Rust.
-# Repo: https://github.com/astral-sh/uv
-# --------------------------------------------------------------------------
-ARG UV_VERSION=0.8.13
+# # --------------------------------------------------------------------------
+# # lazydocker - The lazier way to manage everything docker
+# # Repo: https://github.com/jesseduffield/lazydocker
+# # --------------------------------------------------------------------------
+# ARG LAZYDOCKER_VERSION=0.24.1
 
-COPY resources/prebuildfs/opt/laragis/tools/uv.sh /opt/laragis/tools/uv.sh
-RUN UV_VERSION="${UV_VERSION}" /opt/laragis/tools/uv.sh
+# COPY resources/prebuildfs/opt/laragis/tools/lazydocker.sh /opt/laragis/tools/lazydocker.sh
+# RUN LAZYDOCKER_VERSION="${LAZYDOCKER_VERSION}" /opt/laragis/tools/lazydocker.sh
 
-# --------------------------------------------------------------------------
-# volta - The Hassle-Free JavaScript Tool Manager
-# Repo: https://github.com/volta-cli/volta
-# --------------------------------------------------------------------------
-ARG VOLTA_VERSION=2.0.2
+# # --------------------------------------------------------------------------
+# # Github Cli - GitHub’s official command line tool
+# # Repo: https://github.com/cli/cli
+# # --------------------------------------------------------------------------
+# ARG GITHUB_CLI_VERSION=2.78.0
+# ARG GH_TOKEN
+# ENV GH_TOKEN=${GH_TOKEN}
 
-COPY resources/prebuildfs/opt/laragis/tools/wp-cli.sh /opt/laragis/tools/wp-cli.sh
-RUN VOLTA_VERSION="${VOLTA_VERSION}" /opt/laragis/tools/wp-cli.sh
+# COPY resources/prebuildfs/opt/laragis/tools/github-cli.sh /opt/laragis/tools/github-cli.sh
+# RUN GITHUB_CLI_VERSION="${GITHUB_CLI_VERSION}" /opt/laragis/tools/github-cli.sh
 
-# --------------------------------------------------------------------------
-# wp-cli - WP-CLI is the command-line interface for WordPress
-# Repo: https://github.com/wp-cli/wp-cli
-# --------------------------------------------------------------------------
-ARG WP_CLI_VERSION=2.12.0
+# # --------------------------------------------------------------------------
+# # cloudflared - Cloudflare Tunnel client (formerly Argo Tunnel)
+# # Repo: https://github.com/cloudflare/cloudflared
+# # --------------------------------------------------------------------------
+# ARG CLOUDFLARED_VERSION=2025.8.1
 
-COPY resources/prebuildfs/opt/laragis/tools/wp-cli.sh /opt/laragis/tools/wp-cli.sh
-RUN WP_CLI_VERSION="${WP_CLI_VERSION}" /opt/laragis/tools/wp-cli.sh
+# COPY resources/prebuildfs/opt/laragis/tools/cloudflared.sh /opt/laragis/tools/cloudflared.sh
+# RUN CLOUDFLARED_VERSION="${CLOUDFLARED_VERSION}" /opt/laragis/tools/cloudflared.sh
 
-# --------------------------------------------------------------------------
-# docker - A platform for developing, shipping, and running applications
-# Repo: https://github.com/docker/cli
-# --------------------------------------------------------------------------
-ARG DOCKER_VERSION=28.3.2
+# # --------------------------------------------------------------------------
+# # lazygit - simple terminal UI for git commands
+# # Repo: https://github.com/jesseduffield/lazygit
+# # --------------------------------------------------------------------------
+# ARG LAZYGIT_VERSION=0.54.2
 
-COPY resources/prebuildfs/opt/laragis/tools/docker.sh /opt/laragis/tools/docker.sh
-RUN DOCKER_VERSION="${DOCKER_VERSION}" /opt/laragis/tools/docker.sh
+# COPY resources/prebuildfs/opt/laragis/tools/lazygit.sh /opt/laragis/tools/lazygit.sh
+# RUN LAZYGIT_VERSION="${LAZYGIT_VERSION}" /opt/laragis/tools/lazygit.sh
+
+# # --------------------------------------------------------------------------
+# # ngrox - front door—and the fastest way to put anything on the internet
+# # Repo: https://ngrok.com
+# # --------------------------------------------------------------------------
+# ARG NGROK_VERSION=3.26.0
+# ARG NGROK_AUTHTOKEN
+# ENV NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+
+# COPY resources/prebuildfs/opt/laragis/tools/ngrok.sh /opt/laragis/tools/ngrok.sh
+# RUN NGROK_VERSION="${NGROK_VERSION}" /opt/laragis/tools/ngrok.sh
+
+# # --------------------------------------------------------------------------
+# # starship - The minimal, blazing-fast, and infinitely customizable prompt for any shell!
+# # Repo: https://github.com/starship/starship
+# # --------------------------------------------------------------------------
+# ARG STARSHIP_VERSION=1.23.0
+
+# COPY resources/prebuildfs/opt/laragis/tools/starship.sh /opt/laragis/tools/starship.sh
+# RUN STARSHIP_VERSION="${STARSHIP_VERSION}" /opt/laragis/tools/starship.sh
+
+# # --------------------------------------------------------------------------
+# # tailscale - The easiest, most secure way to use WireGuard and 2FA.
+# # Repo: https://github.com/tailscale/tailscale
+# # --------------------------------------------------------------------------
+# ARG TAILSCALE_VERSION=1.86.2
+
+# COPY resources/prebuildfs/opt/laragis/tools/tailscale.sh /opt/laragis/tools/tailscale.sh
+# RUN TAILSCALE_VERSION="${TAILSCALE_VERSION}" /opt/laragis/tools/tailscale.sh
+
+# # --------------------------------------------------------------------------
+# # task - A task runner / simpler Make alternative written in Go
+# # Repo: https://github.com/go-task/task
+# # --------------------------------------------------------------------------
+# ARG TASK_VERSION=3.44.1
+
+# COPY resources/prebuildfs/opt/laragis/tools/task.sh /opt/laragis/tools/task.sh
+# RUN TASK_VERSION="${TASK_VERSION}" /opt/laragis/tools/task.sh
+
+# # --------------------------------------------------------------------------
+# # Terraform - A tool for building, changing, and versioning infrastructure safely and efficiently
+# # Repo: https://github.com/hashicorp/terraform
+# # --------------------------------------------------------------------------
+# ARG TERRAFORM_VERSION=1.13.0
+
+# COPY resources/prebuildfs/opt/laragis/tools/terraform.sh /opt/laragis/tools/terraform.sh
+# RUN TERRAFORM_VERSION="${TERRAFORM_VERSION}" /opt/laragis/tools/terraform.sh
+
+# # --------------------------------------------------------------------------
+# # Teleport - The easiest, and most secure way to access and protect all of your infrastructure.
+# # Repo: https://github.com/gravitational/teleport
+# # --------------------------------------------------------------------------
+# ARG TELEPORT_VERSION=18.1.6
+
+# COPY resources/prebuildfs/opt/laragis/tools/teleport.sh /opt/laragis/tools/teleport.sh
+# RUN TELEPORT_VERSION="${TELEPORT_VERSION}" /opt/laragis/tools/teleport.sh
+
+# # --------------------------------------------------------------------------
+# # kubectl - Kubernetes command-line tool
+# # Repo: https://github.com/kubernetes/kubernetes
+# # --------------------------------------------------------------------------
+# ARG KUBECTL_VERSION=1.31.12
+
+# COPY resources/prebuildfs/opt/laragis/tools/kubectl.sh /opt/laragis/tools/kubectl.sh
+# RUN KUBECTL_VERSION="${KUBECTL_VERSION}" /opt/laragis/tools/kubectl.sh
+
+# # --------------------------------------------------------------------------
+# # helm - The Kubernetes Package Manager
+# # Repo: https://github.com/helm/helm
+# # --------------------------------------------------------------------------
+# ARG HELM_VERSION=3.18.6
+
+# COPY resources/prebuildfs/opt/laragis/tools/helm.sh /opt/laragis/tools/helm.sh
+# RUN HELM_VERSION="${HELM_VERSION}" /opt/laragis/tools/helm.sh
+
+# # --------------------------------------------------------------------------
+# # k9s - Kubernetes CLI To Manage Your Clusters In Style
+# # Repo: https://github.com/derailed/k9s
+# # --------------------------------------------------------------------------
+# ARG K9S_VERSION=0.50.9
+
+# COPY resources/prebuildfs/opt/laragis/tools/k9s.sh /opt/laragis/tools/k9s.sh
+# RUN K9S_VERSION="${K9S_VERSION}" /opt/laragis/tools/k9s.sh
+
+# # --------------------------------------------------------------------------
+# # gomplate - A flexible commandline tool for template rendering
+# # Repo: https://github.com/hairyhenderson/gomplate
+# # --------------------------------------------------------------------------
+# ARG GOMPLATE_VERSION=4.3.3
+
+# COPY resources/prebuildfs/opt/laragis/tools/gomplate.sh /opt/laragis/tools/gomplate.sh
+# RUN GOMPLATE_VERSION="${GOMPLATE_VERSION}" /opt/laragis/tools/gomplate.sh
+
+# # --------------------------------------------------------------------------
+# # dbeaver - DBeaver Community universal database tool
+# # Repo: https://github.com/dbeaver/dbeaver
+# # --------------------------------------------------------------------------
+# ARG DBEAVER_VERSION=25.1.5
+
+# COPY resources/prebuildfs/opt/laragis/tools/dbeaver.sh /opt/laragis/tools/dbeaver.sh
+# RUN DBEAVER_VERSION="${DBEAVER_VERSION}" /opt/laragis/tools/dbeaver.sh
+
+# # --------------------------------------------------------------------------
+# # mise - dev tools, env vars, task runner
+# # Repo: https://github.com/jdx/mise
+# # --------------------------------------------------------------------------
+# ARG MISE_VERSION=2025.8.20
+
+# COPY resources/prebuildfs/opt/laragis/tools/mise.sh /opt/laragis/tools/mise.sh
+# RUN MISE_VERSION="${MISE_VERSION}" /opt/laragis/tools/mise.sh
+
+# # --------------------------------------------------------------------------
+# # uv - An extremely fast Python package and project manager, written in Rust.
+# # Repo: https://github.com/astral-sh/uv
+# # --------------------------------------------------------------------------
+# ARG UV_VERSION=0.8.13
+
+# COPY resources/prebuildfs/opt/laragis/tools/uv.sh /opt/laragis/tools/uv.sh
+# RUN UV_VERSION="${UV_VERSION}" /opt/laragis/tools/uv.sh
+
+# # --------------------------------------------------------------------------
+# # volta - The Hassle-Free JavaScript Tool Manager
+# # Repo: https://github.com/volta-cli/volta
+# # --------------------------------------------------------------------------
+# ARG VOLTA_VERSION=2.0.2
+
+# COPY resources/prebuildfs/opt/laragis/tools/wp-cli.sh /opt/laragis/tools/wp-cli.sh
+# RUN VOLTA_VERSION="${VOLTA_VERSION}" /opt/laragis/tools/wp-cli.sh
+
+# # --------------------------------------------------------------------------
+# # wp-cli - WP-CLI is the command-line interface for WordPress
+# # Repo: https://github.com/wp-cli/wp-cli
+# # --------------------------------------------------------------------------
+# ARG WP_CLI_VERSION=2.12.0
+
+# COPY resources/prebuildfs/opt/laragis/tools/wp-cli.sh /opt/laragis/tools/wp-cli.sh
+# RUN WP_CLI_VERSION="${WP_CLI_VERSION}" /opt/laragis/tools/wp-cli.sh
+
+# # --------------------------------------------------------------------------
+# # docker - A platform for developing, shipping, and running applications
+# # Repo: https://github.com/docker/cli
+# # --------------------------------------------------------------------------
+# ARG DOCKER_VERSION=28.3.2
+
+# COPY resources/prebuildfs/opt/laragis/tools/docker.sh /opt/laragis/tools/docker.sh
+# RUN DOCKER_VERSION="${DOCKER_VERSION}" /opt/laragis/tools/docker.sh
 
 # --------------------------------------------------------------------------
 # Language Runtimes 
@@ -358,7 +394,7 @@ RUN update-ca-trust
 # 
 # --------------------------------------------------------------------------
 
-COPY ./.ssh ${HOME_DIR}/.ssh
+COPY resources/.ssh ${HOME_DIR}/.ssh
 
 # --------------------------------------------------------------------------
 # 
@@ -375,14 +411,14 @@ RUN mkdir -p ${WORKSPACE_DIR} && chown ${USER_UID}:${USER_GID} ${WORKSPACE_DIR}
 
 # RUN dnf clean all && rm -rf /var/cache/dnf/* /root/.cache/* /tmp/*
 
-EXPOSE 2222
+EXPOSE 2222 9001
 
 #--------------------------------------------------------------------------
 # Container startup configuration
 #--------------------------------------------------------------------------
-WORKDIR ${WORKSPACE_DIR}
+# WORKDIR ${WORKSPACE_DIR}
 
-USER ${USER_NAME}
+# USER ${USER_NAME}
 
 ENTRYPOINT [ "/opt/laragis/scripts/workspace/entrypoint.sh" ]
 CMD [ "/opt/laragis/scripts/workspace/run.sh" ]

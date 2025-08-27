@@ -1,16 +1,8 @@
 #!/bin/bash
-# Copyright Broadcom, Inc. All Rights Reserved.
-# SPDX-License-Identifier: APACHE-2.0
-
-# shellcheck disable=SC1091
-
-set -o errexit
-set -o nounset
-set -o pipefail
-#set -o xtrace
 
 # Load libraries
-. /opt/laragis/scripts/liblog.sh
+. /opt/laragis/lib/bootstrap.sh
+. /opt/laragis/lib/log.sh
 
 # Load Workspace environment
 . /opt/laragis/scripts/workspace-env.sh
@@ -25,11 +17,11 @@ set -o pipefail
 # fi
 
 if [[ "$1" = "/opt/laragis/scripts/workspace/run.sh" ]]; then
-  info "** Starting Workspace setup **"
+  log_info "** Starting Workspace setup **"
   /opt/laragis/scripts/workspace/setup.sh
   /opt/laragis/scripts/supervisor/setup.sh
   /post-init.sh
-  info "** Workspace setup finished! **"
+  log_info "** Workspace setup finished! **"
 fi
 
 [ "$#" -eq 0 ] || exec "$@"
