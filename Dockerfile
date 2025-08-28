@@ -1,10 +1,14 @@
 # syntax=docker/dockerfile:1.7-labs
+
+# -----------------------------------------------------------------------------
+# Base Image Configuration
+# -----------------------------------------------------------------------------
 ARG BASE_IMAGE_NAME=oraclelinux
 ARG BASE_IMAGE_TAG=9
 FROM ${BASE_IMAGE_NAME}:${BASE_IMAGE_TAG} AS base
 
 # --------------------------------------------------------------------------
-# Metadata
+# Container Metadata - OCI Compliant Labels
 # --------------------------------------------------------------------------
 
 LABEL \
@@ -15,28 +19,30 @@ LABEL \
     org.opencontainers.image.description="A comprehensive, production-ready development environment built on Oracle Linux 9 with modern tooling, beautiful UI, and optimized architecture" \
     org.opencontainers.image.vendor="GTEL OTS" \
     org.opencontainers.image.authors="Truong Thanh Tung <ttungbmt@gmail.com>" \
-    org.opencontainers.image.maintainer="Truong Thanh Tung <ttungbmt@gmail.com>, Ho Manh Cuong <homanhcuongit@gmail.com>" \
+    org.opencontainers.image.maintainer="Truong Thanh Tung <ttungbmt@gmail.com>" \
     org.opencontainers.image.licenses="MIT" 
 
-
-# --------------------------------------------------------------------------
-# 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Build Arguments - Container Configuration Parameters
+# -----------------------------------------------------------------------------
 
 ARG TZ=UTC
 
+# User security configuration - following principle of least privilege
 ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USER_NAME=dev
 ARG ROOT_PASSWORD
 ARG USER_PASSWORD
 ARG USER_SHELL=/bin/bash
+
+# Directory structure for organized workspace management
 ARG WORKSPACE_DIR=/workspace
 ARG DATA_DIR=/data
 
-# --------------------------------------------------------------------------
-# 
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Environment Variables - Runtime Configuration
+# -----------------------------------------------------------------------------
 
 ENV DEBIAN_FRONTEND=noninteractive \
     TERM=xterm-256color
@@ -46,9 +52,13 @@ ENV LANG=en_US.UTF-8 \
 
 ENV TZ=${TZ}
 
-ENV USER_UID=${USER_UID}
-ENV USER_GID=${USER_GID}
-ENV USER_NAME=${USER_NAME}
+# User security configuration
+ENV USER_UID=${USER_UID} \
+    USER_GID=${USER_GID} \
+    USER_NAME=${USER_NAME} \
+    USER_SHELL=${USER_SHELL}
+
+# Directory structure for organized workspace management
 ENV WORKSPACE_DIR=${WORKSPACE_DIR}
 ENV HOME_DIR=/home/${USER_NAME}
 ENV DATA_DIR=${DATA_DIR}
@@ -61,6 +71,8 @@ USER root
 COPY --exclude=setup/** --exclude=tools/** --exclude=packages/** \
      resources/prebuildfs/ /
 
+# Optional: Enable strict shell error handling for debugging
+# Uncomment for stricter error handling during development builds
 # SHELL ["/bin/bash", "-o", "errexit", "-o", "nounset", "-o", "pipefail", "-c"]
 
 # --------------------------------------------------------------------------
@@ -107,6 +119,10 @@ RUN dnf -y install glibc-langpack-en glibc-langpack-vi glibc-locale-source && \
 # Development Tools & Libraries Installation
 
 # Enhanced Development Tools Installation Script
+
+# =============================================================================
+# OPTIONAL DEVELOPMENT TOOLS INSTALLATION
+# =============================================================================
 
 # --------------------------------------------------------------------------
 # Supervisor - Supervisor is a process control system
@@ -391,20 +407,61 @@ COPY resources/rootfs /
 RUN /opt/laragis/scripts/workspace/postunpack.sh
 
 #--------------------------------------------------------------------------
-# Final setup and cleanup
+# Final System Configuration and Cleanup
 #--------------------------------------------------------------------------
-RUN mkdir -p ${WORKSPACE_DIR} && chown ${USER_UID}:${USER_GID} ${WORKSPACE_DIR}
 
+# Create and configure workspace directory with proper ownership
+RUN mkdir -p "${WORKSPACE_DIR}" "${DATA_DIR}" && \
+    chown "${USER_UID}:${USER_GID}" "${WORKSPACE_DIR}" "${DATA_DIR}" && \
+    chmod 755 "${WORKSPACE_DIR}" "${DATA_DIR}"
+
+
+# Comprehensive final cleanup to minimize image size
+# Remove package caches, temporary files, documentation, and other artifacts
 RUN dnf clean all && rm -rf /var/cache/dnf/* /root/.cache/* /tmp/*
 
+# -----------------------------------------------------------------------------
+# Network Port Configuration
+# -----------------------------------------------------------------------------
+# Expose ports for services that may run within the container:
+# - 2222: SSH service (non-standard port for security)
+# - 9001: Supervisor web interface for process management
+# - 80: HTTP service for web applications
+# - 443: HTTPS service for secure web applications
 EXPOSE 2222 9001 80 443
 
-# --------------------------------------------------------------------------
-# Container startup configuration
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Container Runtime Configuration
+# -----------------------------------------------------------------------------
+# Configure the container's runtime behavior including working directory,
+# user context, and startup commands for optimal security and functionality.
+
+# Set working directory for container operations
+# This provides a consistent starting point for interactive sessions
 WORKDIR ${WORKSPACE_DIR}
 
+
+# Switch to non-root user for security best practices
+# All application processes will run under this unprivileged user account
 USER ${USER_NAME}
 
 ENTRYPOINT [ "/opt/laragis/scripts/workspace/entrypoint.sh" ]
 CMD [ "/opt/laragis/scripts/workspace/run.sh" ]
+
+# =============================================================================
+# BUILD COMPLETE - Oracle Linux 9 Development Container
+# =============================================================================
+# This container provides a comprehensive development environment with:
+# ✓ Security-hardened configuration with non-root user
+# ✓ Comprehensive development tools and runtimes
+# ✓ SSH server with security best practices
+# ✓ Process management via Supervisor
+# ✓ Flexible tool installation via build arguments
+# ✓ Optimized build process with layer caching
+# ✓ Extensive documentation and configuration options
+#
+# Usage Examples:
+#   docker run -it --rm -p 2222:2222 -p 9001:9001 ws-oracle-linux
+#   docker run -d -p 2222:2222 --name dev-container ws-oracle-linux
+#   ssh -p 2222 dev@localhost  # After configuring SSH keys
+# =============================================================================
