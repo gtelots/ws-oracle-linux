@@ -1,0 +1,10 @@
+.git
+.gitignore
+README.md
+.env*
+*.log
+.cache
+.tmp
+*.swp
+*.swo
+*~
