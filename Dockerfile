@@ -77,7 +77,6 @@ RUN --mount=type=cache,target=/var/cache/dnf \
     dnf install -y --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
         ca-certificates tzdata shadow-utils passwd sudo systemd
 
-
 ARG PYTHON_VERSION=3.12
 ENV PYTHON_VERSION="${PYTHON_VERSION}"
 
