@@ -56,7 +56,6 @@
 - https://github.com/HariSekhon/DevOps-Bash-tools
 - https://github.com/veggiemonk/awesome-docker
 
-
 ## AI
 - aws cli script dùng bin log thay vì tự viết hàm, tránh duplicate
 - Không cần fallback vì file này chắc chắn có source "/opt/laragis/scripts/liblog.sh"
