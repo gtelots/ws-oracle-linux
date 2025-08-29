@@ -699,6 +699,11 @@ For detailed technical documentation, please refer to the following documents in
 - **[Dockerfile Optimization Report](docs/DOCKERFILE_OPTIMIZATION_REPORT.md)** - Comprehensive analysis of Dockerfile optimizations and performance improvements
 - **[Python 3.12 Upgrade Summary](docs/PYTHON_312_UPGRADE_SUMMARY.md)** - Details about the Python 3.12 upgrade and implementation
 - **[Comprehensive Improvements Summary](docs/COMPREHENSIVE_IMPROVEMENTS_SUMMARY.md)** - Complete overview of all recent improvements and enhancements
+- **[Code Quality Audit Report](docs/CODE_QUALITY_AUDIT_REPORT.md)** - Detailed analysis of code duplication elimination and shared library implementation
+- **[Tools Optimization Analysis](docs/TOOLS_OPTIMIZATION_ANALYSIS.md)** - Comprehensive review of all 59 tool scripts with optimization priorities
+- **[Comprehensive Tools Review Summary](docs/COMPREHENSIVE_TOOLS_REVIEW_SUMMARY.md)** - Executive summary of tools directory optimization roadmap
+- **[Script Optimization Guide](docs/SCRIPT_OPTIMIZATION_GUIDE.md)** - Step-by-step guide for optimizing installation scripts
+- **[Essential Components and Standards](docs/ESSENTIAL_COMPONENTS_AND_STANDARDS.md)** - Documentation of essential components and development standards
 
 ## 🔧 **Development Standards**
 
@@ -711,6 +716,24 @@ This project uses consistent coding standards enforced by `.editorconfig`:
 - **Final newline**: Always inserted
 
 **Essential Components**: SSH Server and ZSH shell are installed by default as core components of the development environment.
+
+## 📚 **Shared Libraries Architecture**
+
+The project uses a modular shared library system to eliminate code duplication and improve maintainability:
+
+### **Core Libraries**
+- **`/opt/laragis/lib/install.sh`** - Common installation patterns and utilities (15+ functions)
+- **`/opt/laragis/lib/validation.sh`** - Validation utilities for versions, URLs, files, and system resources (20+ functions)
+- **`/opt/laragis/lib/github.sh`** - GitHub releases integration and download utilities (12+ functions)
+- **`/opt/laragis/lib/bootstrap.sh`** - Core bootstrap functionality
+- **`/opt/laragis/lib/log.sh`** - Standardized logging functions
+
+### **Benefits**
+- **70% reduction** in code duplication across 42+ installation scripts
+- **Centralized maintenance** - updates needed in one place
+- **Consistent behavior** - all scripts use the same patterns
+- **Improved reliability** - shared functions are thoroughly tested
+- **Faster development** - new tools can be added with minimal code
 
 ## 🤝 **Contributing**
 

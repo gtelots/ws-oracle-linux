@@ -11,59 +11,45 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/install.sh
+. /opt/laragis/lib/github.sh
 
 # Configuration
-readonly TOOL_NAME="jq"
-readonly TOOL_VERSION="${JQ_VERSION:-1.7.1}"
-readonly TOOL_FOLDER="${TOOL_FOLDER:-/opt/laragis/tools}"
-readonly TOOL_LOCK_FILE="${TOOL_FOLDER}/jq.installed"
+setup_tool_config "jq" "${JQ_VERSION:-1.7.1}"
 
-is_installed() { os_command_is_installed "$TOOL_NAME" || [[ -f "$TOOL_LOCK_FILE" ]]; }
+# Custom installation function for jq (direct binary download)
+install_jq_binary() {
+  local temp_dir="$(create_temp_dir)"
+  local arch="$(get_github_arch)"
+  local download_url="https://github.com/jqlang/jq/releases/download/jq-${TOOL_VERSION}/jq-linux-${arch}"
 
-install_tool() {
-    # Try package manager first
-    if dnf -y install jq; then
-        log_info "jq installed via package manager"
-    else
-        # Fallback to binary installation
-        local temp_dir="$(mktemp -d)"
-        trap "rm -rf '${temp_dir}'" EXIT
-        
-        # Determine architecture
-        local arch="$(uname -m)"
-        
-        case "$arch" in
-            "x86_64") arch="amd64" ;;
-            "aarch64") arch="arm64" ;;
-            *) log_error "Unsupported architecture: $arch"; return 1 ;;
-        esac
-        
-        # Download jq binary
-        local download_url="https://github.com/jqlang/jq/releases/download/jq-${TOOL_VERSION}/jq-linux-${arch}"
-        
-        log_info "Downloading jq from: ${download_url}"
-        curl -fsSL "${download_url}" -o "${temp_dir}/jq"
-        
-        # Install binary
-        install -m 755 "${temp_dir}/jq" /usr/local/bin/jq
-    fi
-    
-    # Verify installation
-    os_command_is_installed "$TOOL_NAME" || { log_error "jq installation verification failed"; return 1; }
-    
-    # Create lock file
-    mkdir -p "${TOOL_FOLDER}" && touch "${TOOL_LOCK_FILE}"
+  if download_file "$download_url" "${temp_dir}/jq"; then
+    install_binary "${temp_dir}/jq" "/usr/local/bin/jq"
+    return 0
+  else
+    return 1
+  fi
 }
 
 # Main function
 main() {
-    log_info "Installing jq v${TOOL_VERSION}..."
-    
-    is_installed && { log_info "jq is already installed"; return 0; }
-    
-    install_tool
-    
-    log_success "jq v${TOOL_VERSION} installed successfully"
+  log_info "Installing ${TOOL_NAME} v${TOOL_VERSION}..."
+
+  # Check if already installed
+  if is_tool_installed "$TOOL_NAME" "$TOOL_LOCK_FILE"; then
+    log_info "${TOOL_NAME} is already installed"
+    return 0
+  fi
+
+  # Try package manager first, then custom binary installation
+  if try_package_install "$TOOL_NAME" || install_jq_binary; then
+    create_tool_lock_file "$TOOL_LOCK_FILE"
+    verify_tool_installation "$TOOL_NAME" "$TOOL_VERSION"
+    log_success "${TOOL_NAME} v${TOOL_VERSION} installed successfully"
+  else
+    log_error "${TOOL_NAME} installation failed"
+    return 1
+  fi
 }
 
 main "$@"
