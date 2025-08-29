@@ -24,7 +24,7 @@ services:
         ROOT_PASSWORD: ${ROOT_PASSWORD}
         USER_PASSWORD: ${USER_PASSWORD}
         # Development Tools Installation Flags
-        INSTALL_SUPERVISOR: ${INSTALL_SUPERVISOR}
+        # Note: Supervisor is mandatory and always installed
         INSTALL_ANSIBLE: ${INSTALL_ANSIBLE}
         INSTALL_K6: ${INSTALL_K6}
         INSTALL_ZELLIJ: ${INSTALL_ZELLIJ}
@@ -51,6 +51,82 @@ services:
         INSTALL_UV: ${INSTALL_UV}
         INSTALL_VOLTA: ${INSTALL_VOLTA}
         INSTALL_WP_CLI: ${INSTALL_WP_CLI}
+        # Modern CLI Tools Installation Flags
+        INSTALL_NEOVIM: ${INSTALL_NEOVIM}
+        INSTALL_FD: ${INSTALL_FD}
+        INSTALL_RIPGREP: ${INSTALL_RIPGREP}
+        INSTALL_BAT: ${INSTALL_BAT}
+        INSTALL_EZA: ${INSTALL_EZA}
+        INSTALL_HTTPIE: ${INSTALL_HTTPIE}
+        INSTALL_BTOP: ${INSTALL_BTOP}
+        INSTALL_TRIVY: ${INSTALL_TRIVY}
+        # Additional Modern CLI Tools
+        INSTALL_FZF: ${INSTALL_FZF}
+        INSTALL_ZOXIDE: ${INSTALL_ZOXIDE}
+        INSTALL_DUF: ${INSTALL_DUF}
+        # Modern CLI Tools (Individual Control)
+        INSTALL_JQ: ${INSTALL_JQ}
+        INSTALL_YQ: ${INSTALL_YQ}
+        INSTALL_TLDR: ${INSTALL_TLDR}
+        INSTALL_NCDU: ${INSTALL_NCDU}
+        INSTALL_SPEEDTEST_CLI: ${INSTALL_SPEEDTEST_CLI}
+        INSTALL_PROCS: ${INSTALL_PROCS}
+        INSTALL_SD: ${INSTALL_SD}
+        INSTALL_BROOT: ${INSTALL_BROOT}
+        INSTALL_GPING: ${INSTALL_GPING}
+        INSTALL_FASTFETCH: ${INSTALL_FASTFETCH}
+        INSTALL_THEFUCK: ${INSTALL_THEFUCK}
+        INSTALL_CHOOSE: ${INSTALL_CHOOSE}
+        INSTALL_HYPERFINE: ${INSTALL_HYPERFINE}
+        INSTALL_JUST: ${INSTALL_JUST}
+        INSTALL_YAZI: ${INSTALL_YAZI}
+        # Tool Version Variables
+        NEOVIM_VERSION: ${NEOVIM_VERSION:-0.11.3}
+        FD_VERSION: ${FD_VERSION:-10.3.0}
+        RIPGREP_VERSION: ${RIPGREP_VERSION:-14.1.1}
+        BAT_VERSION: ${BAT_VERSION:-0.24.0}
+        EZA_VERSION: ${EZA_VERSION:-0.23.0}
+        HTTPIE_VERSION: ${HTTPIE_VERSION:-3.2.4}
+        BTOP_VERSION: ${BTOP_VERSION:-1.4.4}
+        TRIVY_VERSION: ${TRIVY_VERSION:-0.58.1}
+        FZF_VERSION: ${FZF_VERSION:-0.58.0}
+        ZOXIDE_VERSION: ${ZOXIDE_VERSION:-0.9.6}
+        DUF_VERSION: ${DUF_VERSION:-0.8.1}
+        # Modern CLI Tools Versions
+        JQ_VERSION: ${JQ_VERSION:-1.7.1}
+        YQ_VERSION: ${YQ_VERSION:-4.44.6}
+        TLDR_VERSION: ${TLDR_VERSION:-3.4.0}
+        NCDU_VERSION: ${NCDU_VERSION:-1.19}
+        SPEEDTEST_CLI_VERSION: ${SPEEDTEST_CLI_VERSION:-2.1.3}
+        PROCS_VERSION: ${PROCS_VERSION:-0.14.8}
+        SD_VERSION: ${SD_VERSION:-1.0.0}
+        BROOT_VERSION: ${BROOT_VERSION:-1.44.2}
+        GPING_VERSION: ${GPING_VERSION:-1.18.0}
+        FASTFETCH_VERSION: ${FASTFETCH_VERSION:-2.32.0}
+        THEFUCK_VERSION: ${THEFUCK_VERSION:-3.32}
+        CHOOSE_VERSION: ${CHOOSE_VERSION:-1.3.6}
+        HYPERFINE_VERSION: ${HYPERFINE_VERSION:-1.19.0}
+        JUST_VERSION: ${JUST_VERSION:-1.37.0}
+        YAZI_VERSION: ${YAZI_VERSION:-0.4.2}
+        # Language Runtime Installation Flags
+        INSTALL_JAVA: ${INSTALL_JAVA}
+        INSTALL_RUST: ${INSTALL_RUST}
+        INSTALL_GO: ${INSTALL_GO}
+        INSTALL_NODEJS: ${INSTALL_NODEJS}
+        INSTALL_PHP: ${INSTALL_PHP}
+        INSTALL_RUBY: ${INSTALL_RUBY}
+        INSTALL_PYTHON_EXTRAS: ${INSTALL_PYTHON_EXTRAS}
+        # Language Runtime Versions
+        JAVA_VERSION: ${JAVA_VERSION:-21}
+        RUST_VERSION: ${RUST_VERSION:-1.84.0}
+        GO_VERSION: ${GO_VERSION:-1.23.4}
+        NODEJS_VERSION: ${NODEJS_VERSION:-22.12.0}
+        PHP_VERSION: ${PHP_VERSION:-8.3}
+        RUBY_VERSION: ${RUBY_VERSION:-3.3.6}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.12}
+        # Note: Other modern CLI tools are installed by default
+        # System Services and Shell Configuration
+        # Note: SSH Server and ZSH are installed by default as essential components
     # restart: unless-stopped
     working_dir: ${HOME_DIR}
     # tty: true

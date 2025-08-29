@@ -14,30 +14,55 @@ tasks:
     cmds:
       - |
         echo ""
-        echo "Oracle Linux Development Container"
-        echo "=================================="
+        echo "🐧 Oracle Linux 9 Development Container"
+        echo "========================================"
         echo ""
-        echo "Container Management"
+        echo "📦 Container Management"
         echo "  task up                     Start the development container"
         echo "  task down                   Stop the development container"
         echo "  task restart                Restart the development container"
         echo "  task build                  Build the container image"
         echo "  task rebuild                Rebuild and restart the container"
+        echo "  task fresh                  Fresh install (rebuild everything)"
         echo ""
-        echo "Development"
+        echo "🚀 Development Workflows"
+        echo "  task dev                    Start development mode with enhanced features"
+        echo "  task dev-full               Start with all tools enabled"
+        echo "  task dev-minimal            Start with minimal tools for faster startup"
         echo "  task shell                  Open a shell in the container"
         echo "  task root                   Open a shell as root user"
         echo "  task ssh                    SSH into the container"
         echo ""
-        echo "Information"
+        echo "🔍 Information & Monitoring"
         echo "  task ps                     Show container status"
         echo "  task logs                   Show container logs"
-        echo "  task tools                  List installed tools"
-        echo "  task health                 Check container health"
+        echo "  task tools                  List installed tools and versions"
+        echo "  task health                 Check container health and system status"
+        echo "  task config                 Show current configuration"
+        echo "  task monitor                Monitor container resources in real-time"
         echo ""
-        echo "Utilities"
+        echo "🧪 Testing & Validation"
+        echo "  task test                   Run comprehensive functionality tests"
+        echo "  task test-tools             Test essential tools functionality"
+        echo "  task test-services          Test container services"
+        echo "  task test-network           Test network connectivity"
+        echo "  task benchmark              Run performance benchmarks"
+        echo ""
+        echo "🔒 Security & Maintenance"
+        echo "  task security-scan          Run security scans on the container"
+        echo "  task update                 Update system packages"
+        echo "  task backup                 Backup container data and configurations"
+        echo "  task restore                Restore container data from backup"
+        echo ""
+        echo "🧹 Cleanup & Utilities"
         echo "  task clean                  Clean up Docker resources"
-        echo "  task fresh                  Fresh install (rebuild everything)"
+        echo "  task clean-all              Full cleanup including images and volumes"
+        echo "  task docs                   Generate and serve documentation"
+        echo ""
+        echo "💡 Quick Start:"
+        echo "  task dev                    # Start development environment"
+        echo "  task tools                  # Check installed tools"
+        echo "  task health                 # Verify everything is working"
         echo ""
 
   up:
@@ -126,3 +151,377 @@ tasks:
       - docker system prune -af
       - docker volume prune -f
       - echo "Full cleanup completed!"
+
+  # =============================================================================
+  # DEVELOPMENT AND TESTING TASKS
+  # =============================================================================
+
+  tools:
+    desc: List installed tools and their versions
+    cmds:
+      - echo "📋 Installed Development Tools:"
+      - echo "================================"
+      - docker compose exec workspace bash -c '
+          echo "🏗️  Infrastructure & DevOps:";
+          command -v ansible >/dev/null && echo "  ✅ Ansible: $(ansible --version 2>/dev/null | head -n1 | cut -d\" \" -f3)" || echo "  ❌ Ansible: Not installed";
+          command -v terraform >/dev/null && echo "  ✅ Terraform: $(terraform version 2>/dev/null | head -n1 | cut -d\" \" -f2)" || echo "  ❌ Terraform: Not installed";
+          command -v teleport >/dev/null && echo "  ✅ Teleport: $(teleport version 2>/dev/null | head -n1)" || echo "  ❌ Teleport: Not installed";
+          echo "";
+          echo "☸️  Kubernetes Tools:";
+          command -v kubectl >/dev/null && echo "  ✅ kubectl: $(kubectl version --client --short 2>/dev/null)" || echo "  ❌ kubectl: Not installed";
+          command -v helm >/dev/null && echo "  ✅ Helm: $(helm version --short 2>/dev/null)" || echo "  ❌ Helm: Not installed";
+          command -v k9s >/dev/null && echo "  ✅ k9s: $(k9s version --short 2>/dev/null)" || echo "  ❌ k9s: Not installed";
+          echo "";
+          echo "🐳 Container Tools:";
+          command -v docker >/dev/null && echo "  ✅ Docker: $(docker --version 2>/dev/null | cut -d\" \" -f3 | tr -d \",\")" || echo "  ❌ Docker: Not installed";
+          command -v dry >/dev/null && echo "  ✅ dry: $(dry --version 2>/dev/null)" || echo "  ❌ dry: Not installed";
+          command -v lazydocker >/dev/null && echo "  ✅ lazydocker: $(lazydocker --version 2>/dev/null)" || echo "  ❌ lazydocker: Not installed";
+          echo "";
+          echo "☁️  Cloud Tools:";
+          command -v aws >/dev/null && echo "  ✅ AWS CLI: $(aws --version 2>/dev/null | cut -d\" \" -f1 | cut -d/ -f2)" || echo "  ❌ AWS CLI: Not installed";
+          command -v cloudflared >/dev/null && echo "  ✅ Cloudflared: $(cloudflared --version 2>/dev/null)" || echo "  ❌ Cloudflared: Not installed";
+          command -v tailscale >/dev/null && echo "  ✅ Tailscale: $(tailscale version 2>/dev/null)" || echo "  ❌ Tailscale: Not installed";
+          echo "";
+          echo "🔧 Modern CLI Tools:";
+          command -v nvim >/dev/null && echo "  ✅ Neovim: $(nvim --version 2>/dev/null | head -n1 | cut -d\" \" -f2)" || echo "  ❌ Neovim: Not installed";
+          command -v fd >/dev/null && echo "  ✅ fd: $(fd --version 2>/dev/null)" || echo "  ❌ fd: Not installed";
+          command -v rg >/dev/null && echo "  ✅ ripgrep: $(rg --version 2>/dev/null | head -n1)" || echo "  ❌ ripgrep: Not installed";
+          command -v bat >/dev/null && echo "  ✅ bat: $(bat --version 2>/dev/null)" || echo "  ❌ bat: Not installed";
+          command -v exa >/dev/null && echo "  ✅ exa: $(exa --version 2>/dev/null | head -n1)" || echo "  ❌ exa: Not installed";
+          command -v http >/dev/null && echo "  ✅ HTTPie: $(http --version 2>/dev/null)" || echo "  ❌ HTTPie: Not installed";
+          command -v btm >/dev/null && echo "  ✅ bottom: $(btm --version 2>/dev/null)" || echo "  ❌ bottom: Not installed";
+          command -v trivy >/dev/null && echo "  ✅ Trivy: $(trivy --version 2>/dev/null | head -n1)" || echo "  ❌ Trivy: Not installed";
+          echo "";
+          echo "🚀 Additional Modern Tools:";
+          command -v fzf >/dev/null && echo "  ✅ fzf: $(fzf --version 2>/dev/null)" || echo "  ❌ fzf: Not installed";
+          command -v zoxide >/dev/null && echo "  ✅ zoxide: $(zoxide --version 2>/dev/null)" || echo "  ❌ zoxide: Not installed";
+          command -v duf >/dev/null && echo "  ✅ duf: $(duf --version 2>/dev/null)" || echo "  ❌ duf: Not installed";
+          command -v eza >/dev/null && echo "  ✅ eza: $(eza --version 2>/dev/null | head -n1)" || echo "  ❌ eza: Not installed";
+          command -v btop >/dev/null && echo "  ✅ btop: $(btop --version 2>/dev/null)" || echo "  ❌ btop: Not installed";
+          command -v jq >/dev/null && echo "  ✅ jq: $(jq --version 2>/dev/null)" || echo "  ❌ jq: Not installed";
+          command -v yq >/dev/null && echo "  ✅ yq: $(yq --version 2>/dev/null)" || echo "  ❌ yq: Not installed";
+          command -v tldr >/dev/null && echo "  ✅ tldr: $(tldr --version 2>/dev/null)" || echo "  ❌ tldr: Not installed";
+          command -v ncdu >/dev/null && echo "  ✅ ncdu: $(ncdu --version 2>/dev/null)" || echo "  ❌ ncdu: Not installed";
+          command -v speedtest-cli >/dev/null && echo "  ✅ speedtest-cli: $(speedtest-cli --version 2>/dev/null)" || echo "  ❌ speedtest-cli: Not installed";
+          command -v procs >/dev/null && echo "  ✅ procs: $(procs --version 2>/dev/null)" || echo "  ❌ procs: Not installed";
+          command -v sd >/dev/null && echo "  ✅ sd: $(sd --version 2>/dev/null)" || echo "  ❌ sd: Not installed";
+          command -v broot >/dev/null && echo "  ✅ broot: $(broot --version 2>/dev/null)" || echo "  ❌ broot: Not installed";
+          command -v gping >/dev/null && echo "  ✅ gping: $(gping --version 2>/dev/null)" || echo "  ❌ gping: Not installed";
+          command -v fastfetch >/dev/null && echo "  ✅ fastfetch: $(fastfetch --version 2>/dev/null)" || echo "  ❌ fastfetch: Not installed";
+          command -v thefuck >/dev/null && echo "  ✅ thefuck: $(thefuck --version 2>/dev/null)" || echo "  ❌ thefuck: Not installed";
+          command -v choose >/dev/null && echo "  ✅ choose: $(choose --version 2>/dev/null)" || echo "  ❌ choose: Not installed";
+          command -v hyperfine >/dev/null && echo "  ✅ hyperfine: $(hyperfine --version 2>/dev/null)" || echo "  ❌ hyperfine: Not installed";
+          command -v just >/dev/null && echo "  ✅ just: $(just --version 2>/dev/null)" || echo "  ❌ just: Not installed";
+          command -v yazi >/dev/null && echo "  ✅ yazi: $(yazi --version 2>/dev/null)" || echo "  ❌ yazi: Not installed";
+          echo "";
+          echo "🐚 Shell Configuration:";
+          command -v zsh >/dev/null && echo "  ✅ Zsh: $(zsh --version 2>/dev/null)" || echo "  ❌ Zsh: Not installed";
+          [[ -d "/home/dev/.local/share/zinit" ]] && echo "  ✅ Zinit: Installed" || echo "  ❌ Zinit: Not installed";
+        '
+
+  health:
+    desc: Check container health and system status
+    cmds:
+      - echo "🏥 Container Health Check:"
+      - echo "=========================="
+      - echo "📊 Container Status:"
+      - docker compose ps
+      - echo ""
+      - echo "💾 System Resources:"
+      - docker compose exec workspace bash -c '
+          echo "  CPU Usage: $(top -bn1 | grep \"Cpu(s)\" | cut -d\",\" -f1 | cut -d\":\" -f2 | tr -d \" \" || echo \"N/A\")";
+          echo "  Memory Usage: $(free -h | grep Mem | awk \"{print \$3\"/\"\$2}\" || echo \"N/A\")";
+          echo "  Disk Usage: $(df -h / | tail -1 | awk \"{print \$3\"/\"\$2\" (\"\$5\" used)\"}\" || echo \"N/A\")";
+        '
+      - echo ""
+      - echo "🔧 Service Status:"
+      - docker compose exec workspace bash -c 'supervisorctl status 2>/dev/null || echo "  ⚠️  Supervisor not running"'
+
+  test:
+    desc: Run comprehensive container functionality tests
+    deps: [test-tools, test-services, test-network]
+    cmds:
+      - echo "✅ All tests completed!"
+
+  test-tools:
+    desc: Test essential tools functionality
+    cmds:
+      - echo "🔧 Testing Essential Tools:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing Git...";
+          git --version >/dev/null 2>&1 && echo "  ✅ Git: Working" || echo "  ❌ Git: Failed";
+          echo "  Testing Docker...";
+          docker --version >/dev/null 2>&1 && echo "  ✅ Docker: Working" || echo "  ❌ Docker: Failed";
+          echo "  Testing Python...";
+          python3 --version >/dev/null 2>&1 && echo "  ✅ Python: Working" || echo "  ❌ Python: Failed";
+          echo "  Testing Node.js...";
+          node --version >/dev/null 2>&1 && echo "  ✅ Node.js: Working" || echo "  ❌ Node.js: Failed";
+        '
+
+  test-services:
+    desc: Test container services
+    cmds:
+      - echo "🚀 Testing Container Services:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing Supervisor...";
+          supervisorctl status >/dev/null 2>&1 && echo "  ✅ Supervisor: Active" || echo "  ⚠️  Supervisor: Not active";
+          echo "  Testing SSH availability...";
+          command -v sshd >/dev/null 2>&1 && echo "  ✅ SSH: Available" || echo "  ⚠️  SSH: Not available";
+        '
+
+  test-network:
+    desc: Test network connectivity
+    cmds:
+      - echo "🌐 Testing Network Connectivity:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing internet connectivity...";
+          ping -c 1 -W 5 google.com >/dev/null 2>&1 && echo "  ✅ Internet: Connected" || echo "  ❌ Internet: Failed";
+          echo "  Testing DNS resolution...";
+          nslookup github.com >/dev/null 2>&1 && echo "  ✅ DNS: Working" || echo "  ❌ DNS: Failed";
+        '
+
+  # =============================================================================
+  # ADVANCED DEVELOPMENT TASKS
+  # =============================================================================
+
+  dev:
+    desc: Start development mode with enhanced features
+    cmds:
+      - echo "🚀 Starting development mode..."
+      - task: up
+      - echo "📝 Development environment ready!"
+      - echo "   • Container: http://localhost:9001 (Supervisor)"
+      - echo "   • SSH: ssh -p 2222 dev@localhost"
+      - echo "   • Shell: task shell"
+
+  dev-full:
+    desc: Start development mode with all tools enabled
+    env:
+      INSTALL_NEOVIM: "true"
+      INSTALL_FD: "true"
+      INSTALL_RIPGREP: "true"
+      INSTALL_BAT: "true"
+      INSTALL_EXA: "true"
+      INSTALL_HTTPIE: "true"
+      INSTALL_BOTTOM: "true"
+      INSTALL_TRIVY: "true"
+    cmds:
+      - echo "🔧 Building full development environment..."
+      - task: rebuild
+      - task: dev
+
+  dev-minimal:
+    desc: Start development mode with minimal tools
+    env:
+      INSTALL_ANSIBLE: "false"
+      INSTALL_TERRAFORM: "false"
+      INSTALL_KUBECTL: "false"
+      INSTALL_HELM: "false"
+      INSTALL_K9S: "false"
+      INSTALL_DBEAVER: "false"
+    cmds:
+      - echo "⚡ Building minimal development environment..."
+      - task: rebuild
+      - task: dev
+
+  backup:
+    desc: Backup container data and configurations
+    cmds:
+      - echo "💾 Creating backup..."
+      - mkdir -p ./backups/$(date +%Y%m%d_%H%M%S)
+      - docker compose exec workspace bash -c 'tar -czf /tmp/home_backup.tar.gz -C /home/dev .' || true
+      - docker cp $(docker compose ps -q workspace):/tmp/home_backup.tar.gz ./backups/$(date +%Y%m%d_%H%M%S)/
+      - echo "✅ Backup completed in ./backups/"
+
+  restore:
+    desc: Restore container data from backup
+    cmds:
+      - echo "📥 Available backups:"
+      - ls -la ./backups/ 2>/dev/null || echo "No backups found"
+      - echo "To restore: docker cp backup.tar.gz container:/tmp/ && docker exec container tar -xzf /tmp/backup.tar.gz -C /home/dev"
+
+  benchmark:
+    desc: Run performance benchmarks
+    cmds:
+      - echo "⚡ Running performance benchmarks..."
+      - docker compose exec workspace bash -c '
+          echo "🔧 System Information:";
+          echo "  CPU: $(lscpu | grep \"Model name\" | cut -d\":\" -f2 | xargs)";
+          echo "  Memory: $(free -h | grep Mem | awk \"{print \$2}\")";
+          echo "  Disk: $(df -h / | tail -1 | awk \"{print \$2}\")";
+          echo "";
+          echo "⚡ Performance Tests:";
+          echo "  CPU Test (calculating pi):";
+          time echo "scale=1000; 4*a(1)" | bc -l >/dev/null 2>&1 || echo "  bc not available";
+          echo "  Disk I/O Test:";
+          time dd if=/dev/zero of=/tmp/test bs=1M count=100 2>/dev/null && rm /tmp/test || echo "  dd test failed";
+        '
+
+  security-scan:
+    desc: Run security scans on the container
+    cmds:
+      - echo "🔒 Running security scans..."
+      - docker compose exec workspace bash -c '
+          if command -v trivy >/dev/null 2>&1; then
+            echo "🔍 Scanning container with Trivy...";
+            trivy fs --security-checks vuln /;
+          else
+            echo "⚠️  Trivy not installed, skipping vulnerability scan";
+          fi
+        '
+
+  # =============================================================================
+  # MAINTENANCE AND MONITORING TASKS
+  # =============================================================================
+
+  monitor:
+    desc: Monitor container resources in real-time
+    cmds:
+      - echo "📊 Starting resource monitoring (Press Ctrl+C to stop)..."
+      - docker compose exec workspace bash -c '
+          if command -v btm >/dev/null 2>&1; then
+            btm;
+          elif command -v htop >/dev/null 2>&1; then
+            htop;
+          else
+            top;
+          fi
+        '
+
+  update:
+    desc: Update container tools and system packages
+    cmds:
+      - echo "🔄 Updating system packages..."
+      - docker compose exec --user root workspace bash -c '
+          dnf update -y --security;
+          dnf clean all;
+        '
+      - echo "✅ System packages updated!"
+
+  docs:
+    desc: Generate and serve documentation
+    cmds:
+      - echo "📚 Generating documentation..."
+      - echo "📖 Documentation available:"
+      - echo "   • README.md - Main documentation"
+      - echo "   • ANALYSIS.md - Technical analysis"
+      - echo "   • Dockerfile - Container definition with comments"
+
+  config:
+    desc: Show current configuration
+    cmds:
+      - echo "⚙️  Current Configuration:"
+      - echo "========================="
+      - echo "📋 Environment Variables:"
+      - cat .env | grep -E "^[A-Z]" | head -20
+      - echo ""
+      - echo "🐳 Docker Compose Configuration:"
+      - docker compose config --services
+      - echo ""
+      - echo "📊 Container Status:"
+      - docker compose ps
+
+  # =============================================================================
+  # DEVELOPMENT AND TESTING TASKS
+  # =============================================================================
+
+  tools:
+    desc: List installed tools and their versions
+    cmds:
+      - echo "📋 Installed Development Tools:"
+      - echo "================================"
+      - docker compose exec workspace bash -c '
+          echo "🏗️  Infrastructure & DevOps:";
+          command -v ansible >/dev/null && echo "  ✅ Ansible: $(ansible --version | head -n1 | cut -d" " -f3)" || echo "  ❌ Ansible: Not installed";
+          command -v terraform >/dev/null && echo "  ✅ Terraform: $(terraform version -json | jq -r .terraform_version)" || echo "  ❌ Terraform: Not installed";
+          command -v teleport >/dev/null && echo "  ✅ Teleport: $(teleport version | head -n1 | cut -d" " -f3)" || echo "  ❌ Teleport: Not installed";
+          echo "";
+          echo "☸️  Kubernetes Tools:";
+          command -v kubectl >/dev/null && echo "  ✅ kubectl: $(kubectl version --client -o json | jq -r .clientVersion.gitVersion)" || echo "  ❌ kubectl: Not installed";
+          command -v helm >/dev/null && echo "  ✅ Helm: $(helm version --short)" || echo "  ❌ Helm: Not installed";
+          command -v k9s >/dev/null && echo "  ✅ k9s: $(k9s version -s | grep Version | cut -d: -f2 | tr -d " ")" || echo "  ❌ k9s: Not installed";
+          echo "";
+          echo "🐳 Container Tools:";
+          command -v docker >/dev/null && echo "  ✅ Docker: $(docker --version | cut -d" " -f3 | tr -d ",")" || echo "  ❌ Docker: Not installed";
+          command -v dry >/dev/null && echo "  ✅ dry: $(dry --version)" || echo "  ❌ dry: Not installed";
+          command -v lazydocker >/dev/null && echo "  ✅ lazydocker: $(lazydocker --version)" || echo "  ❌ lazydocker: Not installed";
+          echo "";
+          echo "☁️  Cloud Tools:";
+          command -v aws >/dev/null && echo "  ✅ AWS CLI: $(aws --version | cut -d" " -f1 | cut -d/ -f2)" || echo "  ❌ AWS CLI: Not installed";
+          command -v cloudflared >/dev/null && echo "  ✅ Cloudflared: $(cloudflared --version | head -n1 | cut -d" " -f3)" || echo "  ❌ Cloudflared: Not installed";
+          command -v tailscale >/dev/null && echo "  ✅ Tailscale: $(tailscale version | head -n1 | cut -d" " -f2)" || echo "  ❌ Tailscale: Not installed";
+          echo "";
+          echo "🔧 Modern CLI Tools:";
+          command -v nvim >/dev/null && echo "  ✅ Neovim: $(nvim --version | head -n1 | cut -d" " -f2)" || echo "  ❌ Neovim: Not installed";
+          command -v fd >/dev/null && echo "  ✅ fd: $(fd --version | cut -d" " -f2)" || echo "  ❌ fd: Not installed";
+          command -v rg >/dev/null && echo "  ✅ ripgrep: $(rg --version | head -n1 | cut -d" " -f2)" || echo "  ❌ ripgrep: Not installed";
+          command -v bat >/dev/null && echo "  ✅ bat: $(bat --version | cut -d" " -f2)" || echo "  ❌ bat: Not installed";
+          command -v exa >/dev/null && echo "  ✅ exa: $(exa --version | head -n1 | cut -d" " -f2)" || echo "  ❌ exa: Not installed";
+          command -v http >/dev/null && echo "  ✅ HTTPie: $(http --version | cut -d" " -f2)" || echo "  ❌ HTTPie: Not installed";
+          command -v btm >/dev/null && echo "  ✅ bottom: $(btm --version | cut -d" " -f2)" || echo "  ❌ bottom: Not installed";
+          command -v trivy >/dev/null && echo "  ✅ Trivy: $(trivy --version | head -n1 | cut -d" " -f2)" || echo "  ❌ Trivy: Not installed";
+        '
+
+  health:
+    desc: Check container health and system status
+    cmds:
+      - echo "🏥 Container Health Check:"
+      - echo "=========================="
+      - echo "📊 Container Status:"
+      - docker compose ps
+      - echo ""
+      - echo "💾 System Resources:"
+      - docker compose exec workspace bash -c '
+          echo "  CPU Usage: $(top -bn1 | grep "Cpu(s)" | cut -d"," -f1 | cut -d":" -f2 | tr -d " ")";
+          echo "  Memory Usage: $(free -h | grep Mem | awk "{print \$3\"/\"\$2}")";
+          echo "  Disk Usage: $(df -h / | tail -1 | awk "{print \$3\"/\"\$2\" (\"\$5\" used)\"}")";
+        '
+      - echo ""
+      - echo "🔧 Service Status:"
+      - docker compose exec workspace bash -c 'supervisorctl status' || echo "  ⚠️  Supervisor not running"
+
+  test:
+    desc: Run container functionality tests
+    cmds:
+      - echo "🧪 Running Container Tests:"
+      - echo "==========================="
+      - task: test-tools
+      - task: test-services
+      - task: test-network
+
+  test-tools:
+    desc: Test essential tools functionality
+    cmds:
+      - echo "🔧 Testing Essential Tools:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing Git...";
+          git --version >/dev/null && echo "  ✅ Git: Working" || echo "  ❌ Git: Failed";
+          echo "  Testing Docker...";
+          docker --version >/dev/null && echo "  ✅ Docker: Working" || echo "  ❌ Docker: Failed";
+          echo "  Testing Python...";
+          python3 --version >/dev/null && echo "  ✅ Python: Working" || echo "  ❌ Python: Failed";
+          echo "  Testing Node.js...";
+          node --version >/dev/null && echo "  ✅ Node.js: Working" || echo "  ❌ Node.js: Failed";
+        '
+
+  test-services:
+    desc: Test container services
+    cmds:
+      - echo "🚀 Testing Container Services:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing SSH service...";
+          systemctl is-active ssh >/dev/null 2>&1 && echo "  ✅ SSH: Active" || echo "  ⚠️  SSH: Not active";
+          echo "  Testing Supervisor...";
+          supervisorctl status >/dev/null 2>&1 && echo "  ✅ Supervisor: Active" || echo "  ⚠️  Supervisor: Not active";
+        '
+
+  test-network:
+    desc: Test network connectivity
+    cmds:
+      - echo "🌐 Testing Network Connectivity:"
+      - docker compose exec workspace bash -c '
+          echo "  Testing internet connectivity...";
+          ping -c 1 google.com >/dev/null 2>&1 && echo "  ✅ Internet: Connected" || echo "  ❌ Internet: Failed";
+          echo "  Testing DNS resolution...";
+          nslookup github.com >/dev/null 2>&1 && echo "  ✅ DNS: Working" || echo "  ❌ DNS: Failed";
+        '

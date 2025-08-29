@@ -165,61 +165,24 @@ RUN echo "==> Setting up non-root user: ${USER_NAME} (UID: ${USER_UID}, GID: ${U
 ENV PATH="/home/${USER_NAME}/.local/bin:${PATH}"
 
 # =============================================================================
-# ESSENTIAL SYSTEM UTILITIES AND DEVELOPMENT TOOLS
+# MODULAR PACKAGE INSTALLATION
 # =============================================================================
-# Install comprehensive development environment with system utilities,
-# development tools, compilers, and runtime libraries
+# Install packages using modular scripts for better maintainability
 
-RUN --mount=type=cache,target=/var/cache/dnf \
-    --mount=type=cache,target=/var/lib/dnf \
-    echo "==> Installing essential system utilities and development tools..." && \
-    \
-    # Install essential system utilities organized by category
-    dnf -y install --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
-        # Network and transfer utilities
-        curl wget openssl bind-utils iproute iputils \
-        openssh-clients rsync telnet nc \
-        # Archive and compression tools
-        tar gzip bzip2 xz unzip zip p7zip lz4 zstd \
-        # System utilities and process management
-        procps-ng util-linux findutils which diffutils \
-        less file lsof htop iotop \
-        # Terminal and editor tools
-        ncurses ncurses-devel readline \
-        vim nano tmux screen \
-        # Development essentials
-        git tree jq \
-        # System monitoring and debugging
-        strace tcpdump net-tools sysstat dstat && \
-    \
-    # Install development group packages for comprehensive build environment
-    echo "==> Installing Development Tools group..." && \
-    dnf -y groupinstall "Development Tools" --setopt=install_weak_deps=False && \
-    \
-    # Install additional development tools and libraries organized by purpose
-    echo "==> Installing additional development libraries and runtimes..." && \
-    dnf -y install --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
-        # Build essentials and compilers
-        gcc gcc-c++ make cmake autoconf automake libtool pkgconfig \
-        # Language runtimes
-        golang nodejs npm rust cargo \
-        # Database development libraries
-        sqlite-devel postgresql-devel mysql-devel \
-        # System development libraries
-        openssl-devel libcurl-devel zlib-devel bzip2-devel \
-        xz-devel readline-devel libffi-devel \
-        # XML/JSON processing libraries
-        libxml2-devel libxslt-devel json-c-devel \
-        # Image processing libraries
-        libjpeg-turbo-devel libpng-devel \
-        # Debugging and profiling tools
-        gdb valgrind perf \
-        # Version control systems
-        git-lfs subversion mercurial && \
-    \
-    # Clean package manager cache to reduce layer size
-    echo "==> Cleaning package manager cache..." && \
-    dnf clean all
+# Copy package installation scripts
+COPY resources/prebuildfs/opt/laragis/packages/ /opt/laragis/packages/
+
+# Install core system packages and Python runtime
+RUN echo "==> Installing core system packages and Python runtime..." && \
+    PYTHON_VERSION="${PYTHON_VERSION}" /opt/laragis/packages/core-system-packages.sh
+
+# Install essential development tools
+RUN echo "==> Installing essential development tools..." && \
+    PYTHON_VERSION="${PYTHON_VERSION}" /opt/laragis/packages/development-tools.sh
+
+# Install additional system utilities
+RUN echo "==> Installing additional system utilities..." && \
+    /opt/laragis/packages/system-utilities.sh
 
 # =============================================================================
 # OPTIONAL DEVELOPMENT TOOLS INSTALLATION
@@ -234,7 +197,7 @@ RUN --mount=type=cache,target=/var/cache/dnf \
 # Use INSTALL_<TOOL>=true/false flags to selectively include tools in your build
 # Default: all tools are enabled for comprehensive development environment
 
-ARG INSTALL_SUPERVISOR=true
+# Note: Supervisor is mandatory for container process management
 ARG INSTALL_ANSIBLE=true
 ARG INSTALL_K6=true
 ARG INSTALL_ZELLIJ=true
@@ -262,6 +225,62 @@ ARG INSTALL_UV=true
 ARG INSTALL_VOLTA=true
 ARG INSTALL_WP_CLI=true
 
+# Modern CLI Tools Installation Flags
+ARG INSTALL_NEOVIM=true
+ARG INSTALL_FD=true
+ARG INSTALL_RIPGREP=true
+ARG INSTALL_BAT=true
+ARG INSTALL_EZA=true
+ARG INSTALL_HTTPIE=true
+ARG INSTALL_BTOP=true
+ARG INSTALL_TRIVY=true
+
+# Additional Modern CLI Tools
+ARG INSTALL_FZF=true
+ARG INSTALL_ZOXIDE=true
+ARG INSTALL_DUF=true
+
+# Modern CLI Tools Installation Flags (Individual Control)
+ARG INSTALL_JQ=true
+ARG INSTALL_YQ=true
+ARG INSTALL_TLDR=true
+ARG INSTALL_NCDU=true
+ARG INSTALL_SPEEDTEST_CLI=true
+ARG INSTALL_PROCS=true
+ARG INSTALL_SD=true
+ARG INSTALL_BROOT=true
+ARG INSTALL_GPING=true
+ARG INSTALL_FASTFETCH=true
+ARG INSTALL_THEFUCK=true
+ARG INSTALL_CHOOSE=true
+ARG INSTALL_HYPERFINE=true
+ARG INSTALL_JUST=true
+ARG INSTALL_YAZI=true
+
+ARG INSTALL_MODERN_CLI_GROUP=true
+ARG INSTALL_ADVANCED_CLI_GROUP=true
+
+# System Setup Configuration
+# Note: SSH Server and ZSH are installed by default as essential components
+
+# Language Runtime Installation Flags
+ARG INSTALL_JAVA=true
+ARG INSTALL_RUST=true
+ARG INSTALL_GO=true
+ARG INSTALL_NODEJS=true
+ARG INSTALL_PHP=true
+ARG INSTALL_RUBY=true
+ARG INSTALL_PYTHON_EXTRAS=true
+
+# Language Runtime Versions
+ARG JAVA_VERSION=21
+ARG RUST_VERSION=1.84.0
+ARG GO_VERSION=1.23.4
+ARG NODEJS_VERSION=22.12.0
+ARG PHP_VERSION=8.3
+ARG RUBY_VERSION=3.3.6
+ARG PYTHON_VERSION=3.12
+
 # =============================================================================
 # PROCESS MANAGEMENT - SUPERVISOR
 # =============================================================================
@@ -272,10 +291,9 @@ ARG INSTALL_WP_CLI=true
 ARG SUPERVISOR_VERSION=4.3.0
 COPY resources/prebuildfs/opt/laragis/tools/supervisor.sh /opt/laragis/tools/supervisor.sh
 
-RUN if [ "${INSTALL_SUPERVISOR}" = "true" ]; then \
-        echo "==> Installing Supervisor v${SUPERVISOR_VERSION}..." && \
-        SUPERVISOR_VERSION="${SUPERVISOR_VERSION}" /opt/laragis/tools/supervisor.sh; \
-    fi
+# Install Supervisor (mandatory for container process management)
+RUN echo "==> Installing Supervisor v${SUPERVISOR_VERSION}..." && \
+    SUPERVISOR_VERSION="${SUPERVISOR_VERSION}" /opt/laragis/tools/supervisor.sh
 
 # =============================================================================
 # INFRASTRUCTURE AND DEVOPS TOOLS
@@ -589,6 +607,303 @@ RUN if [ "${INSTALL_MISE}" = "true" ]; then \
     fi
 
 # =============================================================================
+# MODERN CLI TOOLS AND UTILITIES
+# =============================================================================
+# Essential modern command-line tools that enhance developer productivity
+# with better performance, user experience, and additional features
+
+# Neovim - Hyperextensible Vim-based text editor
+# Repository: https://github.com/neovim/neovim
+ARG NEOVIM_VERSION=0.11.3
+
+# fd - Simple, fast and user-friendly alternative to 'find'
+# Repository: https://github.com/sharkdp/fd
+ARG FD_VERSION=10.3.0
+
+# ripgrep - Line-oriented search tool that recursively searches directories
+# Repository: https://github.com/BurntSushi/ripgrep
+ARG RIPGREP_VERSION=14.1.1
+
+# bat - Cat clone with wings (syntax highlighting and Git integration)
+# Repository: https://github.com/sharkdp/bat
+ARG BAT_VERSION=0.24.0
+
+# eza - Modern, maintained replacement for 'ls' with colors and Git integration
+# Repository: https://github.com/eza-community/eza
+ARG EZA_VERSION=0.23.0
+
+# HTTPie - Modern, user-friendly command-line HTTP client
+# Repository: https://github.com/httpie/httpie
+ARG HTTPIE_VERSION=3.2.4
+
+# btop - Feature-rich system monitor with beautiful interface
+# Repository: https://github.com/aristocratos/btop
+ARG BTOP_VERSION=1.4.4
+
+# Trivy - Comprehensive security scanner for vulnerabilities
+# Repository: https://github.com/aquasecurity/trivy
+ARG TRIVY_VERSION=0.58.1
+
+# fzf - Command-line fuzzy finder
+# Repository: https://github.com/junegunn/fzf
+ARG FZF_VERSION=0.58.0
+
+# zoxide - Smart directory jumper
+# Repository: https://github.com/ajeetdsouza/zoxide
+ARG ZOXIDE_VERSION=0.9.6
+
+# duf - Modern disk usage utility
+# Repository: https://github.com/muesli/duf
+ARG DUF_VERSION=0.8.1
+
+# Modern CLI Tools Versions
+# jq - Command-line JSON processor
+# Repository: https://github.com/jqlang/jq
+ARG JQ_VERSION=1.7.1
+
+# yq - Command-line YAML processor
+# Repository: https://github.com/mikefarah/yq
+ARG YQ_VERSION=4.44.6
+
+# tldr - Simplified man pages
+# Repository: https://github.com/tldr-pages/tldr
+ARG TLDR_VERSION=3.4.0
+
+# ncdu - NCurses Disk Usage
+# Repository: https://dev.yorhel.nl/ncdu
+ARG NCDU_VERSION=1.19
+
+# speedtest-cli - Command line speedtest
+# Repository: https://github.com/sivel/speedtest-cli
+ARG SPEEDTEST_CLI_VERSION=2.1.3
+
+# procs - Modern replacement for ps
+# Repository: https://github.com/dalance/procs
+ARG PROCS_VERSION=0.14.8
+
+# sd - Intuitive find & replace CLI
+# Repository: https://github.com/chmln/sd
+ARG SD_VERSION=1.0.0
+
+# broot - Tree view and navigation
+# Repository: https://github.com/Canop/broot
+ARG BROOT_VERSION=1.44.2
+
+# gping - Ping with graph
+# Repository: https://github.com/orf/gping
+ARG GPING_VERSION=1.18.0
+
+# fastfetch - System information tool
+# Repository: https://github.com/fastfetch-cli/fastfetch
+ARG FASTFETCH_VERSION=2.32.0
+
+# thefuck - Command correction tool
+# Repository: https://github.com/nvbn/thefuck
+ARG THEFUCK_VERSION=3.32
+
+# choose - Human-friendly alternative to cut/awk
+# Repository: https://github.com/theryangeary/choose
+ARG CHOOSE_VERSION=1.3.6
+
+# hyperfine - Command-line benchmarking tool
+# Repository: https://github.com/sharkdp/hyperfine
+ARG HYPERFINE_VERSION=1.19.0
+
+# just - Command runner
+# Repository: https://github.com/casey/just
+ARG JUST_VERSION=1.37.0
+
+# yazi - Terminal file manager
+# Repository: https://github.com/sxyazi/yazi
+ARG YAZI_VERSION=0.4.2
+
+# Copy installation scripts for core tools
+COPY resources/prebuildfs/opt/laragis/tools/neovim.sh /opt/laragis/tools/neovim.sh
+COPY resources/prebuildfs/opt/laragis/tools/trivy.sh /opt/laragis/tools/trivy.sh
+
+# Copy modern CLI tools from organized directory
+COPY resources/prebuildfs/opt/laragis/tools/modern-cli/ /opt/laragis/tools/modern-cli/
+
+# Install core modern CLI tools from modern-cli directory
+RUN if [ "${INSTALL_NEOVIM}" = "true" ]; then \
+        echo "==> Installing Neovim v${NEOVIM_VERSION}..." && \
+        NEOVIM_VERSION="${NEOVIM_VERSION}" /opt/laragis/tools/neovim.sh; \
+    fi && \
+    if [ "${INSTALL_FD}" = "true" ]; then \
+        echo "==> Installing fd v${FD_VERSION}..." && \
+        FD_VERSION="${FD_VERSION}" /opt/laragis/tools/modern-cli/fd.sh; \
+    fi && \
+    if [ "${INSTALL_RIPGREP}" = "true" ]; then \
+        echo "==> Installing ripgrep v${RIPGREP_VERSION}..." && \
+        RIPGREP_VERSION="${RIPGREP_VERSION}" /opt/laragis/tools/modern-cli/ripgrep.sh; \
+    fi && \
+    if [ "${INSTALL_BAT}" = "true" ]; then \
+        echo "==> Installing bat v${BAT_VERSION}..." && \
+        BAT_VERSION="${BAT_VERSION}" /opt/laragis/tools/modern-cli/bat.sh; \
+    fi && \
+    if [ "${INSTALL_EZA}" = "true" ]; then \
+        echo "==> Installing eza v${EZA_VERSION}..." && \
+        EZA_VERSION="${EZA_VERSION}" /opt/laragis/tools/modern-cli/eza.sh; \
+    fi && \
+    if [ "${INSTALL_HTTPIE}" = "true" ]; then \
+        echo "==> Installing HTTPie v${HTTPIE_VERSION}..." && \
+        HTTPIE_VERSION="${HTTPIE_VERSION}" /opt/laragis/tools/modern-cli/httpie.sh; \
+    fi && \
+    if [ "${INSTALL_BTOP}" = "true" ]; then \
+        echo "==> Installing btop v${BTOP_VERSION}..." && \
+        BTOP_VERSION="${BTOP_VERSION}" /opt/laragis/tools/modern-cli/btop.sh; \
+    fi && \
+    if [ "${INSTALL_TRIVY}" = "true" ]; then \
+        echo "==> Installing Trivy v${TRIVY_VERSION}..." && \
+        TRIVY_VERSION="${TRIVY_VERSION}" /opt/laragis/tools/trivy.sh; \
+    fi
+
+# Install additional modern CLI tools individually
+RUN if [ "${INSTALL_FZF}" = "true" ]; then \
+        echo "==> Installing fzf v${FZF_VERSION}..." && \
+        FZF_VERSION="${FZF_VERSION}" /opt/laragis/tools/modern-cli/fzf.sh; \
+    fi && \
+    if [ "${INSTALL_ZOXIDE}" = "true" ]; then \
+        echo "==> Installing zoxide v${ZOXIDE_VERSION}..." && \
+        ZOXIDE_VERSION="${ZOXIDE_VERSION}" /opt/laragis/tools/modern-cli/zoxide.sh; \
+    fi && \
+    if [ "${INSTALL_DUF}" = "true" ]; then \
+        echo "==> Installing duf v${DUF_VERSION}..." && \
+        DUF_VERSION="${DUF_VERSION}" /opt/laragis/tools/modern-cli/duf.sh; \
+    fi
+
+# Install modern CLI tools with conditional installation
+RUN if [ "${INSTALL_JQ}" = "true" ]; then \
+        echo "==> Installing jq v${JQ_VERSION}..." && \
+        JQ_VERSION="${JQ_VERSION}" /opt/laragis/tools/modern-cli/jq.sh; \
+    fi && \
+    if [ "${INSTALL_YQ}" = "true" ]; then \
+        echo "==> Installing yq v${YQ_VERSION}..." && \
+        YQ_VERSION="${YQ_VERSION}" /opt/laragis/tools/modern-cli/yq.sh; \
+    fi && \
+    if [ "${INSTALL_TLDR}" = "true" ]; then \
+        echo "==> Installing tldr v${TLDR_VERSION}..." && \
+        TLDR_VERSION="${TLDR_VERSION}" /opt/laragis/tools/modern-cli/tldr.sh; \
+    fi && \
+    if [ "${INSTALL_NCDU}" = "true" ]; then \
+        echo "==> Installing ncdu v${NCDU_VERSION}..." && \
+        NCDU_VERSION="${NCDU_VERSION}" /opt/laragis/tools/modern-cli/ncdu.sh; \
+    fi && \
+    if [ "${INSTALL_SPEEDTEST_CLI}" = "true" ]; then \
+        echo "==> Installing speedtest-cli v${SPEEDTEST_CLI_VERSION}..." && \
+        SPEEDTEST_CLI_VERSION="${SPEEDTEST_CLI_VERSION}" /opt/laragis/tools/modern-cli/speedtest-cli.sh; \
+    fi && \
+    if [ "${INSTALL_PROCS}" = "true" ]; then \
+        echo "==> Installing procs v${PROCS_VERSION}..." && \
+        PROCS_VERSION="${PROCS_VERSION}" /opt/laragis/tools/modern-cli/procs.sh; \
+    fi && \
+    if [ "${INSTALL_SD}" = "true" ]; then \
+        echo "==> Installing sd v${SD_VERSION}..." && \
+        SD_VERSION="${SD_VERSION}" /opt/laragis/tools/modern-cli/sd.sh; \
+    fi && \
+    if [ "${INSTALL_BROOT}" = "true" ]; then \
+        echo "==> Installing broot v${BROOT_VERSION}..." && \
+        BROOT_VERSION="${BROOT_VERSION}" /opt/laragis/tools/modern-cli/broot.sh; \
+    fi && \
+    if [ "${INSTALL_GPING}" = "true" ]; then \
+        echo "==> Installing gping v${GPING_VERSION}..." && \
+        GPING_VERSION="${GPING_VERSION}" /opt/laragis/tools/modern-cli/gping.sh; \
+    fi && \
+    if [ "${INSTALL_FASTFETCH}" = "true" ]; then \
+        echo "==> Installing fastfetch v${FASTFETCH_VERSION}..." && \
+        FASTFETCH_VERSION="${FASTFETCH_VERSION}" /opt/laragis/tools/modern-cli/fastfetch.sh; \
+    fi && \
+    if [ "${INSTALL_THEFUCK}" = "true" ]; then \
+        echo "==> Installing thefuck v${THEFUCK_VERSION}..." && \
+        THEFUCK_VERSION="${THEFUCK_VERSION}" /opt/laragis/tools/modern-cli/thefuck.sh; \
+    fi && \
+    if [ "${INSTALL_CHOOSE}" = "true" ]; then \
+        echo "==> Installing choose v${CHOOSE_VERSION}..." && \
+        CHOOSE_VERSION="${CHOOSE_VERSION}" /opt/laragis/tools/modern-cli/choose.sh; \
+    fi && \
+    if [ "${INSTALL_HYPERFINE}" = "true" ]; then \
+        echo "==> Installing hyperfine v${HYPERFINE_VERSION}..." && \
+        HYPERFINE_VERSION="${HYPERFINE_VERSION}" /opt/laragis/tools/modern-cli/hyperfine.sh; \
+    fi && \
+    if [ "${INSTALL_JUST}" = "true" ]; then \
+        echo "==> Installing just v${JUST_VERSION}..." && \
+        JUST_VERSION="${JUST_VERSION}" /opt/laragis/tools/modern-cli/just.sh; \
+    fi && \
+    if [ "${INSTALL_YAZI}" = "true" ]; then \
+        echo "==> Installing yazi v${YAZI_VERSION}..." && \
+        YAZI_VERSION="${YAZI_VERSION}" /opt/laragis/tools/modern-cli/yazi.sh; \
+    fi
+
+# =============================================================================
+# LANGUAGE RUNTIMES
+# =============================================================================
+# Install programming language runtimes and package managers
+
+# Copy language runtime installation scripts
+COPY resources/prebuildfs/opt/laragis/languages/ /opt/laragis/languages/
+
+# Install Java (OpenJDK)
+RUN if [ "${INSTALL_JAVA}" = "true" ]; then \
+        echo "==> Installing Java OpenJDK v${JAVA_VERSION}..." && \
+        JAVA_VERSION="${JAVA_VERSION}" /opt/laragis/languages/java.sh; \
+    fi
+
+# Install Rust with Cargo
+RUN if [ "${INSTALL_RUST}" = "true" ]; then \
+        echo "==> Installing Rust v${RUST_VERSION}..." && \
+        RUST_VERSION="${RUST_VERSION}" /opt/laragis/languages/rust.sh; \
+    fi
+
+# Install Go
+RUN if [ "${INSTALL_GO}" = "true" ]; then \
+        echo "==> Installing Go v${GO_VERSION}..." && \
+        GO_VERSION="${GO_VERSION}" /opt/laragis/languages/go.sh; \
+    fi
+
+# Install Node.js with npm/yarn
+RUN if [ "${INSTALL_NODEJS}" = "true" ]; then \
+        echo "==> Installing Node.js v${NODEJS_VERSION}..." && \
+        NODEJS_VERSION="${NODEJS_VERSION}" /opt/laragis/languages/nodejs.sh; \
+    fi
+
+# Install PHP with Composer
+RUN if [ "${INSTALL_PHP}" = "true" ]; then \
+        echo "==> Installing PHP v${PHP_VERSION}..." && \
+        PHP_VERSION="${PHP_VERSION}" /opt/laragis/languages/php.sh; \
+    fi
+
+# Install Ruby with rbenv and Bundler
+RUN if [ "${INSTALL_RUBY}" = "true" ]; then \
+        echo "==> Installing Ruby v${RUBY_VERSION}..." && \
+        RUBY_VERSION="${RUBY_VERSION}" /opt/laragis/languages/ruby.sh; \
+    fi
+
+# Install Python extras (additional packages and tools)
+RUN if [ "${INSTALL_PYTHON_EXTRAS}" = "true" ]; then \
+        echo "==> Installing Python extras..." && \
+        PYTHON_VERSION="${PYTHON_VERSION}" /opt/laragis/languages/python-extras.sh; \
+    fi
+
+# =============================================================================
+# SYSTEM SERVICES AND SHELL CONFIGURATION
+# =============================================================================
+# Configure SSH server and modern shell environments
+
+# Copy system setup scripts and dotfiles
+COPY resources/prebuildfs/opt/laragis/setup/setup-ssh.sh /opt/laragis/setup/setup-ssh.sh
+COPY resources/prebuildfs/opt/laragis/setup/setup-zsh.sh /opt/laragis/setup/setup-zsh.sh
+COPY resources/prebuildfs/opt/laragis/setup/setup-bash.sh /opt/laragis/setup/setup-bash.sh
+COPY resources/dotfiles/ /opt/laragis/dotfiles/
+
+# Setup SSH server and shell environments (essential components)
+RUN echo "==> Setting up SSH server..." && \
+    /opt/laragis/setup/setup-ssh.sh && \
+    echo "==> Setting up Bash shell..." && \
+    /opt/laragis/setup/setup-bash.sh && \
+    echo "==> Setting up Zsh shell..." && \
+    /opt/laragis/setup/setup-zsh.sh
+
+# =============================================================================
 # FINAL SYSTEM CONFIGURATION AND CLEANUP
 # =============================================================================
 # This section handles final system configuration, security certificates,
@@ -607,6 +922,14 @@ COPY resources/.ssh ${HOME_DIR}/.ssh
 
 # Copy additional system configuration files and scripts
 COPY resources/rootfs /
+
+# Copy development workflow and health check scripts
+COPY resources/prebuildfs/opt/laragis/scripts/health-check.sh /opt/laragis/scripts/health-check.sh
+COPY resources/prebuildfs/opt/laragis/scripts/dev-workflow.sh /opt/laragis/scripts/dev-workflow.sh
+
+# Create symbolic links for development workflow tools
+RUN ln -sf /opt/laragis/scripts/dev-workflow.sh /usr/local/bin/dev-workflow && \
+    ln -sf /opt/laragis/scripts/health-check.sh /usr/local/bin/health-check
 
 # -----------------------------------------------------------------------------
 # FINAL SYSTEM SETUP AND OPTIMIZATION
@@ -668,6 +991,10 @@ USER ${USER_NAME}
 
 ENTRYPOINT [ "/opt/laragis/scripts/workspace/entrypoint.sh" ]
 CMD [ "/opt/laragis/scripts/workspace/run.sh" ]
+
+# Container health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /opt/laragis/scripts/health-check.sh
 
 # =============================================================================
 # BUILD COMPLETE - Oracle Linux 9 Development Container
