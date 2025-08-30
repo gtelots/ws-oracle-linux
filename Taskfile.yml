@@ -65,7 +65,7 @@ tasks:
     desc: Build the container image
     cmds:
       - echo "Building container image..."
-      - docker compose build
+      - docker compose build --no-cache
       - echo "Build completed successfully!"
 
   rebuild:

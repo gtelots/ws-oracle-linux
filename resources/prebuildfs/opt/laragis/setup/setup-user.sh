@@ -2,10 +2,13 @@
 
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
+. /opt/laragis/lib/log.sh
 . /opt/laragis/lib/pkg.sh
 
 # Main execution
 main() {
+  log_info "==> Setting up non-root user: ${USER_NAME} (UID: ${USER_UID}, GID: ${USER_GID})..." && \
+
   # ---- Guards & defaults (fail fast if missing) ----
   : "${USER_NAME:?USER_NAME required}"
   : "${USER_UID:?USER_UID required}"
@@ -70,7 +73,7 @@ main() {
   chown -R "${USER_UID}:${USER_GID}" "${HOME_DIR}"
   chmod 700 "${HOME_DIR}/.ssh"
 
-  echo "OK: user ${USER_NAME} ready (sudo=${SUDO_POLICY})"
+  log_success "OK: user ${USER_NAME} ready (sudo=${SUDO_POLICY})"
 }
 
 # Run main function

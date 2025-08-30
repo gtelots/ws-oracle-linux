@@ -52,8 +52,8 @@ services:
         INSTALL_VOLTA: ${INSTALL_VOLTA}
         INSTALL_WP_CLI: ${INSTALL_WP_CLI}
     # restart: unless-stopped
-    working_dir: ${HOME_DIR}
-    # tty: true
+    # working_dir: ${HOME_DIR}
+    tty: true
     # ports:
     #   - "${SSH_FORWARD_PORT}:${SSH_PORT}"
     networks:

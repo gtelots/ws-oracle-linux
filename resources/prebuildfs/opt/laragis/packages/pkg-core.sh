@@ -1,9 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =============================================================================
-# Core System Foundation Setup Script
+# Core System Packages Installation Script  
 # =============================================================================
-# DESCRIPTION: Sets up repositories, installs core packages, and configures
-#              basic system settings for Oracle Linux 9
+# DESCRIPTION: Installs core system packages and Python runtime
 # AUTHOR: Truong Thanh Tung <ttungbmt@gmail.com>
 # VERSION: 1.0.0
 # =============================================================================
@@ -11,194 +10,149 @@
 # Load libraries
 . /opt/laragis/lib/bootstrap.sh
 . /opt/laragis/lib/log.sh
+. /opt/laragis/lib/user.sh
+. /opt/laragis/lib/pkg.sh
 
-# Repository and system update
-setup_repositories() {
-  log_info "Setting up repositories and updating system..."
+# Configuration
+readonly SCRIPT_NAME="pkg-core"
+readonly SCRIPT_VERSION="1.0.0"
+
+# Python version from environment or default
+readonly PYTHON_VERSION="${PYTHON_VERSION:-3.12}"
+
+# Configure repositories and package management
+configure_repositories() {
+  log_info "Configuring repositories and package management..."
   
-  # Check if EPEL is already configured
-  if dnf repolist enabled | grep -q epel; then
-    log_info "✓ EPEL repository already enabled"
-  else
-    # Enable EPEL repository
-    log_info "Configuring EPEL repository..."
-    if ! pkg-install oracle-epel-release-el9; then
-      log_info "Fallback: Enabling EPEL via config-manager..."
-      dnf -y config-manager --enable ol9_developer_EPEL || log_warn "EPEL setup failed"
-    fi
+  # Install dnf plugins core
+  dnf -y install --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
+    dnf-plugins-core
+  
+  # Enable EPEL repository - try Oracle's first, fallback to developer EPEL
+  log_info "Enabling EPEL repository..."
+  if ! dnf -y install oracle-epel-release-el9; then
+    log_warn "Oracle EPEL not available, enabling developer EPEL..."
+    dnf -y config-manager --enable ol9_developer_EPEL || true
   fi
   
-  # Update system with security patches (combined with cache refresh)
-  log_info "Updating system packages and refreshing cache..."
-  if ! dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh; then
-    log_warn "Security update failed or no updates available"
+  log_success "Repository configuration completed"
+}
+
+# Apply security updates
+apply_security_updates() {
+  log_info "Applying security updates..."
+  
+  # Apply security updates (non-fatal if none available)
+  if dnf -y update-minimal --security --setopt=install_weak_deps=False --refresh; then
+    log_success "Security updates applied successfully"
+  else
+    log_warn "No security updates available or update failed"
   fi
 }
 
-# Core system packages
-readonly CORE_PACKAGES=(
-  "ca-certificates"
-  "tzdata" 
-  "shadow-utils"
-  "passwd"
-  "sudo"
-  "systemd"
-)
-
-# Locale packages
-readonly LOCALE_PACKAGES=(
-  "glibc-langpack-en"
-  "glibc-langpack-vi"
-  "glibc-locale-source"
-)
-
-install_package_group() {
-  local group_name=$1
-  shift
-  local packages=("$@")
+# Install core system packages
+install_core_packages() {
+  log_info "Installing core system packages..."
   
-  log_info "Installing $group_name..."
-  
-  # Check which packages are already installed (faster batch check)
-  local to_install=()
-  local already_installed=()
-  
-  log_info "Checking package status..."
-  for package in "${packages[@]}"; do
-    if rpm -q "$package" >/dev/null 2>&1; then
-      already_installed+=("$package")
-    else
-      to_install+=("$package")
-    fi
-  done
-  
-  # Report already installed packages
-  if [[ ${#already_installed[@]} -gt 0 ]]; then
-    log_info "✓ Already installed: ${already_installed[*]}"
-  fi
-  
-  # Install missing packages in batch (much faster)
-  if [[ ${#to_install[@]} -gt 0 ]]; then
-    log_info "Installing missing packages: ${to_install[*]}"
+  local core_packages=(
+    # Core system packages
+    ca-certificates
+    tzdata
+    shadow-utils
+    passwd
+    sudo
+    systemd
     
-    # Use pkg-install for better retry logic and optimization
-    if pkg-install "${to_install[@]}"; then
-      log_info "✓ All packages installed successfully"
-    else
-      log_warn "⚠ Some packages may have failed, checking individual status..."
-      
-      # Fallback: check which ones actually failed
-      local failed_packages=()
-      for package in "${to_install[@]}"; do
-        if ! rpm -q "$package" >/dev/null 2>&1; then
-          failed_packages+=("$package")
-        fi
-      done
-      
-      if [[ ${#failed_packages[@]} -gt 0 ]]; then
-        log_warn "Failed packages: ${failed_packages[*]}"
-        # Try individual installation for failed packages
-        for package in "${failed_packages[@]}"; do
-          log_info "Retrying individual install: $package"
-          if pkg-install "$package"; then
-            log_info "✓ $package installed on retry"
-          else
-            log_warn "✗ $package installation failed completely"
-          fi
-        done
-      fi
-    fi
-  else
-    log_info "✓ All packages already installed"
-  fi
+    # Locale support
+    glibc-langpack-en
+    glibc-langpack-vi
+    glibc-locale-source
+  )
   
-  log_info "$group_name installation completed!"
+  # Install core packages in single transaction
+  dnf -y install --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
+    "${core_packages[@]}"
+  
+  log_success "Core system packages installed successfully"
 }
 
-configure_system() {
-  log_info "Configuring basic system settings..."
+# Install Python runtime and development tools
+install_python_runtime() {
+  log_info "Installing Python ${PYTHON_VERSION} runtime and development tools..."
   
-  # Set timezone if TZ variable is available
-  if [[ -n "${TZ:-}" ]]; then
-    log_info "Setting timezone to: $TZ"
-    if [[ -f "/usr/share/zoneinfo/$TZ" ]]; then
-      ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime
-      echo "$TZ" > /etc/timezone
-    else
-      log_warn "Timezone $TZ not found, keeping default"
-    fi
+  local python_packages=(
+    # Python 3 default packages
+    python3
+    python3-pip
+    python3-setuptools
+    python3-devel
+    
+    # Specific Python version packages
+    "python${PYTHON_VERSION}"
+    "python${PYTHON_VERSION}-pip"
+    "python${PYTHON_VERSION}-setuptools"
+    "python${PYTHON_VERSION}-wheel"
+    "python${PYTHON_VERSION}-devel"
+  )
+
+  # Create symbolic links for version consistency
+  if [[ "${PYTHON_VERSION}" != "3" ]]; then
+    ln -sf /usr/bin/python${PYTHON_VERSION} /usr/local/bin/python3
+    ln -sf /usr/bin/pip${PYTHON_VERSION} /usr/local/bin/pip3
   fi
   
-  # Set locale
-  log_info "Configuring locale settings..."
-  if command -v localectl >/dev/null 2>&1; then
-    # Try to set locale, but don't fail if systemd is not running
-    if systemctl is-system-running >/dev/null 2>&1 || [[ -z "${SYSTEMD_IGNORE_CHROOT:-}" ]]; then
-      localectl set-locale LANG=en_US.UTF-8 2>/dev/null || log_warn "Failed to set locale via localectl"
-    else
-      log_info "Systemd not available, setting locale manually..."
-      echo 'LANG=en_US.UTF-8' > /etc/locale.conf
-    fi
-  else
-    log_info "localectl not available, setting locale manually..."
-    echo 'LANG=en_US.UTF-8' > /etc/locale.conf
-  fi
+  # Install Python packages
+  dnf -y install --setopt=install_weak_deps=False --setopt=tsflags=nodocs \
+    "${python_packages[@]}"
   
-  log_info "System configuration completed!"
+  # Install pipx for isolated Python tool installation
+  log_info "Installing pipx for isolated Python tools..."
+  "pip${PYTHON_VERSION}" install pipx
+  
+  log_success "Python ${PYTHON_VERSION} runtime installed successfully"
 }
 
+# Configure timezone settings
+configure_timezone() {
+  local timezone="${TZ:-UTC}"
+  
+  log_info "Configuring timezone settings to ${timezone}..."
+  
+  # Set timezone
+  ln -snf "/usr/share/zoneinfo/${timezone}" /etc/localtime
+  echo "${timezone}" > /etc/timezone
+  
+  log_success "Timezone configured to ${timezone}"
+}
+
+# Verify repository configuration
+verify_repositories() {
+  log_info "Verifying repository configuration..."
+  
+  # List enabled repositories
+  dnf repolist enabled
+  
+  log_success "Repository verification completed"
+}
+
+# Main installation function
 main() {
-  log_info "Starting core system foundation setup..."
+  log_info "Core System Packages Installer v${SCRIPT_VERSION}"
   
-  # Step 1: Repository setup
-  setup_repositories
+  # Check prerequisites
+  check_root
   
-  # Step 2: Install all packages in optimized batches
-  log_info "Installing all packages in optimized batches..."
+  # Execute installation steps
+  configure_repositories
+  apply_security_updates
+  install_core_packages
+  install_python_runtime
+  configure_timezone
+  verify_repositories
+  cleanup_cache
   
-  # Combine all packages for single transaction (fastest approach)
-  local all_packages=("${CORE_PACKAGES[@]}" "${LOCALE_PACKAGES[@]}")
-  
-  log_info "Checking status of ${#all_packages[@]} packages..."
-  local to_install=()
-  local already_installed=()
-  
-  # Batch check all packages at once
-  for package in "${all_packages[@]}"; do
-    if rpm -q "$package" >/dev/null 2>&1; then
-      already_installed+=("$package")
-    else
-      to_install+=("$package")
-    fi
-  done
-  
-  # Report status
-  if [[ ${#already_installed[@]} -gt 0 ]]; then
-    log_info "✓ Already installed (${#already_installed[@]}): ${already_installed[*]}"
-  fi
-  
-  # Install all missing packages in single transaction
-  if [[ ${#to_install[@]} -gt 0 ]]; then
-    log_info "Installing ${#to_install[@]} missing packages in single transaction..."
-    log_info "Packages: ${to_install[*]}"
-    
-    if pkg-install "${to_install[@]}"; then
-      log_info "✓ All ${#to_install[@]} packages installed successfully"
-    else
-      log_warn "⚠ Batch installation failed, falling back to individual checks..."
-      
-      # Fallback to group installation for better error handling
-      install_package_group "Core System Packages" "${CORE_PACKAGES[@]}"
-      install_package_group "Locale Packages" "${LOCALE_PACKAGES[@]}"
-    fi
-  else
-    log_info "✓ All packages already installed, skipping installation"
-  fi
-  
-  # Step 3: Configure system
-  configure_system
-  
-  log_info "Core system foundation setup completed successfully!"
+  log_success "Core system packages installation completed successfully"
 }
 
+# Run main function
 main "$@"
